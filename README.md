@@ -13,7 +13,7 @@ CognitiveMapr uses:
 
 ...and some more smaller packages and api's.
 
-## Folder strucutre
+## Folder structure
 
 - **Assets** contains fonts, images and other global assets.
 - **Components** contains the Vue components, small building blocks used to build other components or pages.
