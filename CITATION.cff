@@ -20,14 +20,13 @@ authors:
 - family-names: "Rozendaal"
   given-names: "Thomas"
 - family-names: "Tichattibin"
-  given-names: "Nabill"
+  given-names: "Nabil"
 - family-names: "van der Wulp"
   given-names: "Timo"
 title: "CognitiveMapr"
 version: 1.0.0
-doi: 10.5281/zenodo.1234
 date-released: 2024-01-31
-url: "https://github.com/github-linguist/linguist"
+url: "https://github.com/jfasnellens/cognitivemapr"
 preferred-citation:
   type: article
   authors:
