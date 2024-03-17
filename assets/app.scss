@@ -1,0 +1,104 @@
+/*
+*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+* It is distributed under the GPL 3.0 open source license.
+*/
+
+@font-face {
+    font-family: 'Poppins';
+    src:
+      url('assets/fonts/Poppins/Poppins-Regular.ttf') format('ttf');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Poppins';
+    src:
+      url('assets/fonts/Poppins/Poppins-Bold.ttf') format('ttf');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src:
+      url('assets/fonts/Poppins/Poppins-Medium.ttf') format('ttf');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+#app{
+    font-family: 'Poppins', serif;
+}
+
+.notification {
+  // styling
+  margin: 0 5px 5px;
+  padding: 8px;
+  font-size: 24px;
+  color: #ffffff;
+
+  // default (blue)
+  background: #44a4fc;
+  border-left: 5px solid #187fe7;
+
+  // types (green, amber, red)
+  &.success {
+    background: #68cd86;
+    border-left-color: #42a85f;
+  }
+
+  &.warn {
+    background: #ffb648;
+    border-left-color: #f48a06;
+  }
+
+  &.error {
+    background: #e54d42;
+    border-left-color: #b82e24;
+  }
+}
+
+body {
+  & * {
+    font:
+      normal 1rem/1.3125rem 'Poppins',
+      sans-serif; 
+    white-space: 'pre-wrap',
+  }
+  font:
+    normal 1rem/1.3125rem 'Poppins',
+    sans-serif;
+}
+
+h1 {
+  font: bold 1.75rem/2.3125rem 'Poppins', sans-serif;
+  margin: 0;
+}
+
+h2 {
+  font: bold 1.375rem/1.9375rem 'Poppins', sans-serif;
+  margin: 0;
+}
+
+h3,span {
+  font: bold 1.125rem/1.5625rem 'Poppins', sans-serif;
+  margin: 0;
+}
+
+h4 {
+  font: bold 1rem/1.5rem 'Poppins', sans-serif;
+  margin: 0;
+}
+
+h5 {
+  font: normal 1rem/1.25rem 'Poppins', sans-serif;
+  margin: 0;
+}
+
+p {
+  font: normal 1rem/1.25rem 'Poppins', sans-serif;
+  margin: 0;
+}

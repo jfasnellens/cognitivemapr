@@ -1,0 +1,163 @@
+/*
+*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+* It is distributed under the GPL 3.0 open source license.
+*/
+
+// This root notation makes the scss variables available to typescript, so that script can be used to switch colours
+:root {
+  /* Reference Variables */
+
+  /*basic colors:*/
+  --txt-color: var(--txt-color-l);
+  --background-color: var(--background-color-l);
+  --link-color: var(--link-color-l);
+
+  /*button colors:*/
+  /*default*/
+  --dflt-btn-color: var(--dflt-btn-color-l);
+  --dflt-hvr-color: var(--dflt-hvr-color-l);
+  --dflt-act-color: var(--dflt-act-color-l);
+  /*faded*/
+  --fad-btn-color: var(--fad-btn-color-l);
+  --fad-hvr-color: var(--fad-hvr-color-l);
+  --fad-act-color: var(--fad-act-color-l);
+  /*nav bar*/
+  --dflt-nav-color: var(--dflt-nav-color-l);
+  --dflt-navhvr-color: var(--dflt-navhvr-color-l);
+  --dflt-navact-color: var(--dflt-navact-color-l);
+  /*close*/
+  --close-btn-color: var(--close-btn-color-l);
+  --close-hvr-color: var(--close-hvr-color-l);
+  --close-act-color: var(--close-act-color-l);
+  /*disabled*/
+  --disabled-color: var(--disabled-color-l);;
+
+  /*table colors:*/
+  --thead-color: var(--thead-color-l);
+  --nth-row-color: var(--nth-row-color-l);
+
+  /*border colors:*/
+  --dflt-bor1-color: var(--dflt-bor1-color-l);
+  --dflt-bor2-color: var(--dflt-bor2-color-l);
+  --help-bor1-color: var(--help-bor1-color-l);
+
+  /*background model overlay*/
+  --overlay-model: var(--overlay-model-l);
+
+  /* Light */
+
+  /*basic colors:*/
+  --txt-color-l: black;
+  --background-color-l: white;
+  --link-color-l: blue;
+  
+  /*button colors:*/
+  /*default*/
+  --dflt-btn-color-l: #73EAD4;
+  --dflt-hvr-color-l: #0be6bd;
+  --dflt-act-color-l: #07a88a;
+  /*faded*/
+  --fad-btn-color-l: #ACD7CF;
+  --fad-hvr-color-l: #80dbca;
+  --fad-act-color-l: #2bc0a5;
+  /*nav bar*/
+  --dflt-nav-color-l: #C5FBF1;
+  --dflt-navhvr-color-l: #92f0df;
+  --dflt-navact-color-l: #2ae0bf;
+  /*close*/
+  --close-btn-color-l: transparent;
+  --close-hvr-color-l: #9a9c9c;
+  --close-act-color-l: #666969;
+  /*disabled*/
+  --disabled-color-l: #374F52;
+
+  /*table color-ls:*/
+  --thead-color-l: #73EAD4;
+  --nth-row-color-l: #EEEEEE;
+
+  /*border color-ls:*/
+  --dflt-bor1-color-l: black;
+  --dflt-bor2-color-l: #AAAAAA;
+  --help-bor1-color-l: #B9B9B9;
+
+  /*background model overlay*/
+  --overlay-model-l: #0000008b;
+
+  /* Dark */
+
+  /*basic colors:*/
+  --txt-color-d: white;
+  --background-color-d: #17181f;
+  --link-color-d: #919ae1;
+  
+  /*button colors:*/
+  /*default*/
+  --dflt-btn-color-d: #576CBC;
+  --dflt-hvr-color-d: #6280c5;
+  --dflt-act-color-d: #8faae3;
+  /*faded*/
+  --fad-btn-color-d: #677094;
+  --fad-hvr-color-d: #7984ac;
+  --fad-act-color-d: #8da2d3;
+  /*nav bar*/
+  --dflt-nav-color-d: #19376D;
+  --dflt-navhvr-color-d: #576CBC;
+  --dflt-navact-color-d: #0B2447;
+  /*close*/
+  --close-btn-color-d: transparent;
+  --close-hvr-color-d: #9c9a9c;
+  --close-act-color-d: #696669;
+  /*disabled*/
+  --disabled-color-d: #4a4f55;
+
+  /*table color-ds:*/
+  --thead-color-d: #19376D;
+  --nth-row-color-d: #25252a;
+
+  /*border color-ds:*/
+  --dflt-bor1-color-d: white;
+  --dflt-bor2-color-d: #AAAAAA;
+  --help-bor1-color-d: #B9B9B9;
+
+  /*background model overlay*/
+  --overlay-model-l: #0000008b;
+
+  /* Color Blind */
+
+  /*basic colors:*/
+  --txt-color-c: black;
+  --background-color-c: white;
+  --link-color-c: blue;
+  
+  /*button colors:*/
+  /*default*/
+  --dflt-btn-color-c: #56B4E9;
+  --dflt-hvr-color-c: #88CCEE;
+  --dflt-act-color-c: #56B4E9;
+  /*faded*/
+  --fad-btn-color-c: #0072B2;
+  --fad-hvr-color-c: #56B4E9;
+  --fad-act-color-c: #0072B2;
+  /*nav bar*/
+  --dflt-nav-color-c: #9edfff;
+  --dflt-navhvr-color-c: #56B4E9;
+  --dflt-navact-color-c: #56B4E9;
+  /*close*/
+  --close-btn-color-c: transparent;
+  --close-hvr-color-c: #9a9c9c;
+  --close-act-color-c: #666969;
+  /*disabled*/
+  --disabled-color-c: #332288;
+
+  /*table color-ls:*/
+  --thead-color-c: #56B4E9;
+  --nth-row-color-c: #EEEEEE;
+
+  /*border color-ls:*/
+  --dflt-bor1-color-c: black;
+  --dflt-bor2-color-c: #AAAAAA;
+  --help-bor1-color-c: #B9B9B9;
+
+  /*background model overlay*/
+  --overlay-model-c: #0000008b;
+}

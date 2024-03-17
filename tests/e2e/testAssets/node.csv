@@ -1,0 +1,100 @@
+id;node_name;paradigms;int;value;instr;Keynesian;Ordoliberal
+3;[E]CB independence;Ordoliberal;Supranational;1;NA;0;1
+22;austerity programme problemstates;Ordoliberal;Intergovernmental;1;Stronger EU fiscal regulation;0;1
+39;benefit of all;NA;NA;1;NA;0;0
+43;Benefit of others;NA;NA;1;NA;0;0
+44;Benefit of our state;NA;Intergovernmental;1;NA;0;0
+47;Benefit of the MS;NA;Intergovernmental;1;NA;0;0
+56;Budgetary deficits;Keynesian;NA;-1;NA;0;2
+67;Clear and strong budgetary rules in EMU;Ordoliberal;Supranational;1;Stronger EU fiscal regulation;0;1
+68;clear and strong multilateral surveillance;NA;Intergovernmental;1;NA;0;0
+75;Common interest rate;NA;Supranational;-1;NA;0;0
+76;Common market;NA;Supranational;1;NA;0;0
+78;competitiveness;NA;NA;1;NA;0;0
+80;Compliance;NA;NA;1;NA;0;0
+81;Compliance with SGP norms;Ordoliberal;Intergovernmental;1;NA;0;3
+86;constitutional debt-brake;Ordoliberal;Intergovernmental;1;NA;0;3
+87;contagion;NA;NA;1;NA;0;0
+90;convergence in competitiveness;Ordoliberal;NA;0;NA;0;0
+93;Cope with future pension problems;NA;NA;1;Structural Reforms;0;0
+110;crisis management system;NA;NA;1;NA;0;0
+133;Dependency on Markets;NA;NA;-1;NA;0;0
+138;Different mentality;NA;NA;1;NA;0;0
+142;Difficult negotiations amongst MS;NA;Intergovernmental;1;NA;0;0
+152;ECB asset purchases;Keynesian;Supranational;1;ECB Measures;3;0
+168;Economic depression;NA;NA;-1;NA;0;0
+170;economic growth;Keynesian;NA;1;NA;3;0
+174;economic stability;NA;NA;1;NA;0;0
+175;economic stimulation;Keynesian;NA;0;Economic Stimulation;0;0
+176;Economic strong Europe;NA;NA;1;NA;0;0
+186;Employment;Keynesian;NA;1;NA;2;0
+189;EMU;NA;NA;1;NA;0;0
+193;enforcement;NA;NA;1;NA;0;0
+208;eurobonds;Keynesian;Supranational;-1;NA;0;1
+209;Euro-crisis;NA;NA;0;NA;0;0
+220;European cooperation;NA;Intergovernmental;1;NA;0;0
+236;European integration;NA;NA;1;NA;0;0
+243;European political cooperation;NA;Intergovernmental;1;NA;0;0
+252;European social policy harmonisation;NA;Intergovernmental;1;NA;0;0
+254;European unification;NA;Supranational;1;NA;0;0
+255;European Union;NA;Supranational;1;NA;0;0
+257;Euro-plus-pact;Keynesian;Intergovernmental;1;Economic Stimulation;1;0
+264;excessive debt;Keynesian;NA;-1;NA;0;6
+265;excessive deficits;Keynesian;NA;0;NA;0;0
+276;export-level;Keynesian;NA;1;NA;3;0
+283;Fear for Euro break-up;NA;NA;-1;NA;0;0
+294;fiscal consolidation;Ordoliberal;Intergovernmental;1;NA;0;2
+296;Fiscal discipline;Ordoliberal;Intergovernmental;0;NA;0;0
+300;Fiscal support package;Keynesian;Intergovernmental;1;Fiscal Support;11;0
+318;French German cooperation;NA;Intergovernmental;1;NA;0;0
+320;fulfilling conditions;Ordoliberal;Intergovernmental;1;NA;0;3
+326;German economic strength;NA;NA;1;NA;0;0
+337;Harmonisation of European interests;NA;Intergovernmental;1;NA;0;0
+340;High exchange rate;NA;NA;-1;NA;0;0
+370;innovation;NA;NA;1;Structural Reforms;0;0
+388;laying measures down in EU treaty;NA;NA;1;Stronger EU fiscal regulation;0;0
+392;Liberalisation;NA;NA;1;Structural Reforms;0;0
+394;Long process;NA;NA;1;NA;0;0
+396;Long-term saviour of banking-sector;Keynesian;NA;0;Financial Market Measures;0;0
+399;Low transaction costs;NA;NA;1;NA;0;0
+405;Market trust;NA;NA;1;NA;0;0
+427;MS responsibility to ensure their competitiveness;Ordoliberal;NA;1;Structural Reforms;0;2
+429;Mutual European effort;NA;Intergovernmental;1;NA;0;0
+435;national independence;NA;Intergovernmental;-1;NA;0;0
+448;Our national policies;NA;Intergovernmental;-1;NA;0;0
+452;peace;NA;NA;1;NA;0;0
+460;Political and economic strong Europe;NA;NA;1;NA;0;0
+461;Political commitment;NA;Intergovernmental;1;NA;0;0
+464;Political will;NA;NA;1;NA;0;0
+473;Price stability;Ordoliberal;NA;1;NA;0;3
+480;Problems;NA;NA;-1;NA;0;0
+491;Prudent banks or financial system;NA;NA;1;NA;0;0
+538;Sanctions;NA;NA;1;NA;0;0
+543;SGP;NA;NA;1;NA;0;0
+546;SGP under tension;Keynesian;NA;-1;NA;0;1
+547;shared values;NA;NA;1;NA;0;0
+552;single currency;NA;NA;1;NA;0;0
+563;Social justice;NA;NA;1;NA;0;0
+564;social market economy;NA;NA;1;NA;0;0
+566;solidarity;NA;NA;1;NA;0;0
+569;solving the crisis;NA;NA;1;NA;0;0
+572;Sound national economic and financial policy;NA;Intergovernmental;1;NA;0;0
+574;Sound public finances;Ordoliberal;Intergovernmental;1;NA;0;4
+578;speculation;NA;NA;-1;NA;0;0
+579;Stabilitaetsunion;Ordoliberal;Supranational;1;NA;0;5
+581;Stability of Eurozone;NA;NA;0;NA;0;0
+583;Stability of single currency;NA;Supranational;1;NA;0;0
+593;Strengthened SGP;Ordoliberal;Intergovernmental;1;Stronger EU fiscal regulation;0;5
+602;Structural reforms;NA;NA;1;Structural Reforms;0;0
+606;Successful EMU;NA;Supranational;1;NA;0;0
+607;Successful European Union;NA;NA;1;NA;0;0
+614;Survival of EMU;NA;Supranational;1;NA;0;0
+615;Survival of EU;NA;NA;1;NA;0;0
+616;sustainable economic growth;Keynesian;NA;0;NA;0;0
+621;taking your own responsibility;NA;NA;1;NA;0;0
+633;trust in European integration;NA;NA;1;NA;0;0
+638;uncertainty;NA;NA;-1;NA;0;0
+644;wage rise;Keynesian;NA;-1;Structural Reforms;0;1
+645;Welfare;NA;NA;1;NA;0;0
+646;well functioning common market;NA;Supranational;1;NA;0;0
+647;Wider yield spread;NA;NA;1;NA;0;0
