@@ -1,4 +1,3 @@
-https://doi.org/10.1080/13501763.2022.2155215
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
@@ -22,7 +21,7 @@ preferred-citation:
   - family-names: "Snellens"
     given-names: "Jeroen"
     orcid: "https://orcid.org/0009-0007-0755-6297"
-  doi: "10.0000/00000"
+  doi: "10.1080/13501763.2022.2155215"
   journal: "Journal of European Public Policy"
   month: 1
   start: 428
