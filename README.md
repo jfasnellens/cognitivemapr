@@ -1,5 +1,5 @@
 <!-- This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course. It is distributed under the GPL 3.0 open source license. -->
-
+[![DOI](https://zenodo.org/badge/771932312.svg)](https://zenodo.org/doi/10.5281/zenodo.10827420)
 # Technical specifications
 
 CognitiveMapr uses:
