@@ -2,12 +2,12 @@ https://doi.org/10.1080/13501763.2022.2155215
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-  - family-names: "van Esch"
-    given-names: "Femke"
-    orcid: "https://orcid.org/0000-0002-2559-3127"
-  - family-names: "Snellens"
-    given-names: "Jeroen"
-    orcid: "https://orcid.org/0009-0007-0755-6297"
+- family-names: "van Esch"
+  given-names: "Femke"
+  orcid: "https://orcid.org/0000-0002-2559-3127"
+- family-names: "Snellens"
+  given-names: "Jeroen"
+  orcid: "https://orcid.org/0009-0007-0755-6297"
 title: "CognitiveMapr"
 version: 1.0.0
 doi: 10.5281/zenodo.1234
@@ -25,9 +25,9 @@ preferred-citation:
   doi: "10.0000/00000"
   journal: "Journal of European Public Policy"
   month: 1
-  start: 428 # First page number
-  end: 451 # Last page number
-  title: "How to ‘Measure’ Ideas. Introducing the Method of Cognitive Mapping to the Domain of Ideational Policy Studies"
+  start: 428
+  end: 451
+  title: "How to 'Measure' Ideas. Introducing the Method of Cognitive Mapping to the Domain of Ideational Policy Studies"
   issue: 2
   volume: 31
   year: 2024
