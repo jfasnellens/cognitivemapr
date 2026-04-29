@@ -10,7 +10,7 @@ It is distributed under the GPL 3.0 open source license.-->
   .legend
     .entry(v-for='(entry, id) in graph.settings.legend', :key='id')
       .paradigmEntry(
-        v-if='entry.type === EntryType.Paradigm && scriptSettings.paradigmSupport.enabled'
+        v-if='EntryType && entry.type === EntryType.Paradigm && scriptSettings.paradigmSupport.enabled'
       )
         .circle(
           :style='`background-color: ${entry.color}`',
@@ -20,7 +20,7 @@ It is distributed under the GPL 3.0 open source license.-->
           ref='nodeText',
           @click='(e) => { highLightNodes(id); e.target.classList.toggle("active"); }'
         ) {{ entry.text }}
-      .edgeEntry(v-if='entry.type == EntryType.Arrow')
+      .edgeEntry(v-if='EntryType && entry.type == EntryType.Arrow')
         .arrow(@click.stop='openColorPicker($event, id)')
           svgo-arrowRight(:style='`color: ${entry.color}`')
         .entryText(
@@ -47,7 +47,6 @@ It is distributed under the GPL 3.0 open source license.-->
 <script setup lang="ts">
 // Provides the right names for paradigms in the legend
 import { storeToRefs } from 'pinia';
-import { useScriptStore } from '@/stores/scriptStore';
 import type { Graph } from '~/types/graph';
 import { EntryType } from '~/types/graph';
 
@@ -123,6 +122,7 @@ function hideEdges(id: string) {
       graph.value.settings.show.negativeEdges = true;
       graph.value.settings.show.positiveEdges = true;
   }
+  emit('color-changed', graph.value.settings.legend);
 }
 /**
  * Toggles settings in the globalStore
@@ -147,7 +147,7 @@ window.addEventListener('click', (e) => {
   if (colorPicker.value.show) {
     if (
       document.querySelector('.colorPickerWrapper') &&
-      !document.querySelector('.colorPickerWrapper').contains(e.target)
+      !document.querySelector('.colorPickerWrapper')?.contains(e.target)
     ) {
       colorPicker.value.show = false;
     }
@@ -162,12 +162,12 @@ function changeColor(color: string) {
   graph.value.settings.legend[colorPicker.value.parent].color = color;
   colorPicker.value.parent = '';
   colorPicker.value.show = false;
-  emit('color-changed');
+  emit('color-changed', graph.value.settings.legend);
 }
 
 // The code below concerns positioning of the legend
-const positionX: Ref<number> = ref(10);
-const positionY: Ref<number> = ref(10);
+const positionX: Ref<number> = ref(globalStore.visualSettings.showLegend.positionX);
+const positionY: Ref<number> = ref(globalStore.visualSettings.showLegend.positionY);
 const offsetX: Ref<number> = ref(0);
 const offsetY: Ref<number> = ref(0);
 const legendWrapper = ref<HTMLElement | undefined>();
@@ -200,6 +200,9 @@ onMounted(() => {
   }
 
   window.addEventListener('resize', () => updatePosition(positionX.value, positionY.value));
+
+  // update position so the position from the store is inside the bounderies.
+  updatePosition(positionX.value, positionY.value);
 });
 
 onUnmounted(() => {
@@ -229,6 +232,10 @@ function updatePosition(x: number, y: number) {
       // set the element's new position:
       positionX.value = Math.min(Math.max(10, x), maxX);
       positionY.value = Math.min(Math.max(10, y), maxY);
+
+      // set the element's new position in store:
+      globalStore.visualSettings.showLegend.positionX = positionX.value;
+      globalStore.visualSettings.showLegend.positionY = positionY.value;
     }
   }
 }

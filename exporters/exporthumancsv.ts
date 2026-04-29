@@ -14,16 +14,14 @@ export class ExportHumanCSV implements Exporter {
   nodeIdCounter = 0;
   edgeIdCounter = 0;
   graph!: Graph;
-  constructor(graph: Graph) {
-    this.graph = graph;
-  }
 
   /**
    * Exports full graph to human readable CSV
    * @returns String array with edge and node array in base64 form
    */
-  async export(): Promise<string[]> {
+  async export(graph: Graph): Promise<string[]> {
     return await new Promise((resolve) => {
+      this.graph = graph;
       const csvnodes: string = this.nodesToCSV();
       const csvedges: string = this.edgesToCSV();
 
@@ -101,15 +99,19 @@ export class ExportHumanCSV implements Exporter {
    * @returns Edge array in CSV Base64 form
    */
   edgesToCSV(): string {
-    let csvcontent: string = 'from;to;edge_id;edge_value;weight;map_id;map_date;speaker'; // Column headers
+    let csvcontent: string = 'from;to;edge_id;weight;positive_weight;neutral_weight;negative_weight;summed_weight;edge_value;map_id;map_date;speaker'; // Column headers
     this.graph.edgeArray.forEach((edge) => {
       // Rows
       csvcontent +=
         `\n${nodeIdToName(this.graph, edge.from.toString())}` +
         `;${nodeIdToName(this.graph, edge.to.toString()) ?? ''}` +
         `;${this.edgeId(edge) ?? ''}` +
-        `;${edge.edgeValue ?? ''}` +
         `;${edge.weight ?? ''}` +
+        `;${edge.posWeight ?? ''}` +
+        `;${edge.neutWeight ?? ''}` +
+        `;${edge.negWeight ?? ''}` +
+        `;${edge.summedWeight ?? ''}` +
+        `;${edge.edgeValue ?? ''}` +
         `;${edge.mapId ?? ''}` +
         `;${edge.mapDate ? this.dateToString(edge.mapDate) : ''}` +
         `;${edge.speaker ?? ''}`;

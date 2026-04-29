@@ -2032,3 +2032,169 @@ export function graphX(): { nodes: Array<Node>; edges: Array<Edge> } {
   const edgeArray = [edge1, edge2];
   return { edges: edgeArray, nodes: nodeArray };
 }
+
+export function graphY(): { nodes: Array<Node>; edges: Array<Edge> } {
+  // Graph with a stable cycle as end goal, user values included
+  const node1: Node = {
+    id: 1,
+    nodeName: 'a',
+    evaluation: { inputValue: 1, pickedValue: 0 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const node2: Node = {
+    id: 2,
+    nodeName: 'b',
+    evaluation: { inputValue: 1, pickedValue: -1 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const node3: Node = {
+    id: 3,
+    nodeName: 'c',
+    evaluation: { inputValue: 1, pickedValue: -1 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const node4: Node = {
+    id: 4,
+    nodeName: 'd',
+    evaluation: { inputValue: -1 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const nodeArray = [node1, node2, node3, node4];
+  const edge1: Edge = {
+    from: 1,
+    to: 2,
+    weight: 1,
+    edgeValue: 1,
+    id: 1,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edge2: Edge = {
+    from: 2,
+    to: 3,
+    weight: 1,
+    edgeValue: 1,
+    id: 2,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edge3: Edge = {
+    from: 3,
+    to: 1,
+    weight: 1,
+    edgeValue: 1,
+    id: 3,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edge4: Edge = {
+    from: 4,
+    to: 3,
+    weight: 1,
+    edgeValue: 1,
+    id: 4,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edgeArray = [edge1, edge2, edge3, edge4];
+  return { edges: edgeArray, nodes: nodeArray };
+}
+
+export function graphZ(): { nodes: Array<Node>; edges: Array<Edge> } {
+  // Graph with a unstable cycle as end goal, user values included
+  const node1: Node = {
+    id: 1,
+    nodeName: 'a',
+    evaluation: { inputValue: 1, pickedValue: 0 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const node2: Node = {
+    id: 2,
+    nodeName: 'b',
+    evaluation: { inputValue: 1, pickedValue: -1 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const node3: Node = {
+    id: 3,
+    nodeName: 'c',
+    evaluation: { inputValue: 1, pickedValue: -1 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const node4: Node = {
+    id: 4,
+    nodeName: 'd',
+    evaluation: { inputValue: 0 },
+    degrees: structuredClone(emptyDegrees()),
+    weightedDegrees: structuredClone(emptyDegrees()),
+  };
+  const nodeArray = [node1, node2, node3, node4];
+  const edge1: Edge = {
+    from: 1,
+    to: 2,
+    weight: 1,
+    edgeValue: 1,
+    id: 1,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edge2: Edge = {
+    from: 2,
+    to: 3,
+    weight: 1,
+    edgeValue: -1,
+    id: 2,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edge3: Edge = {
+    from: 3,
+    to: 1,
+    weight: 1,
+    edgeValue: 1,
+    id: 3,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edge4: Edge = {
+    from: 4,
+    to: 3,
+    weight: 1,
+    edgeValue: 1,
+    id: 4,
+    mapId: '28',
+    mapDate: dayjs('01-04-1987', 'DD-MM-YYYY').toISOString(),
+    speaker: 'Marck Rötte',
+    valueX: 0,
+    valueY: 0,
+  };
+  const edgeArray = [edge1, edge2, edge3, edge4];
+  return { edges: edgeArray, nodes: nodeArray };
+}

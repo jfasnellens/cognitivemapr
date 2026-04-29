@@ -1,7 +1,7 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import { generateId, isNumeric } from './utils';
 import { ScriptError } from '~/types/errors';
@@ -25,8 +25,12 @@ export function buildGraphScript(
     data?: object | undefined;
   }>;
 } {
-  const { nodes: generatedNodes, warnings } = generateNodesBasedOnEdgesScript(edges, vertices);
-  const filledEdges: Array<Edge> = fillEdges(edges, generatedNodes);
+  const { edges: uniqueEdges, warnings: aggrWarnings } = aggregateEdges(edges);
+  const { nodes: generatedNodes, warnings: genNodeWarnings } = generateNodesBasedOnEdgesScript(
+    uniqueEdges,
+    vertices,
+  );
+  const filledEdges: Array<Edge> = fillEdges(uniqueEdges, generatedNodes);
 
   const graph = fillArraysScript(filledEdges, generatedNodes);
   filledEdges.forEach((edge) => {
@@ -85,7 +89,7 @@ export function buildGraphScript(
       }
     }
   });
-  return { graph, warnings };
+  return { graph, warnings: aggrWarnings.concat(genNodeWarnings) };
 }
 
 /**
@@ -231,7 +235,7 @@ function fillEdges(partialEdges: Array<Partial<Edge>>, nodes: Array<Node>): Arra
       subComponent: 'Edge hydrator',
     });
   }
-  // If the from is already filled when we get here, it means its an advanced CSV.
+  // If the from is already filled when we get here, it means it's an advanced CSV.
   if (isNumeric(partialEdges[0].from?.toString()) && isNumeric(nodes[0].id.toString()))
     return partialEdges as Array<Edge>;
 
@@ -266,4 +270,68 @@ function fillEdges(partialEdges: Array<Partial<Edge>>, nodes: Array<Node>): Arra
   });
 
   return filledEdges;
+}
+
+/**
+ * Combines edges that have same from-to pairs and sums their weights.
+ * @param edges Array of partial edges to aggregate
+ * @returns Array of aggregated edges
+ */
+function aggregateEdges(edges: Partial<Edge>[]): {
+  edges: Partial<Edge>[];
+  warnings: { from: string; message: string; subComponent?: string | undefined }[];
+} {
+  const warnings: { from: string; message: string; subComponent?: string | undefined }[] = [];
+  let aggregateCount = 0;
+
+  const edgeMap: Map<string, Array<Partial<Edge>>> = new Map<string, Array<Partial<Edge>>>();
+  edges.forEach((edge) => {
+    const key = `${edge.from ?? edge.fromName}-${edge.to ?? edge.toName}`;
+    if (!edgeMap.has(key)) {
+      edgeMap.set(key, [edge]);
+    } else {
+      const current = edgeMap.get(key);
+      if (current) {
+        current.push(edge);
+      }
+    }
+  });
+  const aggregatedEdges: Partial<Edge>[] = [];
+
+  edgeMap.forEach((value) => {
+    if (value.length === 1) {
+      aggregatedEdges.push(value[0]);
+    } else {
+      aggregateCount++;
+      const newEdge: Partial<Edge> = {
+        from: value[0].from,
+        to: value[0].to,
+        id: value[0].id,
+        fromName: value[0].fromName,
+        toName: value[0].toName,
+        edgeValue: Math.sign(value.reduce((acc, edge) => acc + (edge.edgeValue! * edge.weight!), 0)),
+        weight: value.reduce((acc, edge) => acc + edge.weight!, 0),
+        posWeight: value.reduce((acc, edge) => acc + edge.posWeight!, 0),
+        neutWeight: value.reduce((acc, edge) => acc + edge.neutWeight!, 0),
+        negWeight: value.reduce((acc, edge) => acc + edge.negWeight!, 0),
+        summedWeight: value.reduce((acc, edge) => acc + edge.summedWeight!, 0),
+        aggregatedSrc: value,
+      };
+
+      aggregatedEdges.push(newEdge);
+    }
+  });
+
+  if (aggregateCount > 0) {
+    warnings.push({
+      from: 'Graph builder',
+      subComponent: 'Edge aggregator',
+      message: `${aggregateCount} edges were aggregated during the building of the graph.`,
+    });
+  }
+
+  return {
+    edges: aggregatedEdges,
+    warnings,
+  };
 }

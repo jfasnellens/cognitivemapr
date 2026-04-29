@@ -38,7 +38,6 @@ It is distributed under the GPL 3.0 open source license.-->
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { useFileStore } from '@/stores/fileStore';
 
 const fileStore = useFileStore();
 const { collections } = storeToRefs(fileStore);

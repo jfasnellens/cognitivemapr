@@ -1,7 +1,7 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import { Sigma } from 'sigma';
 import { toCanvas } from 'html-to-image';
@@ -63,7 +63,7 @@ export class ExportJPG implements Exporter {
         const mainCanvas = await toCanvas(mainGraphContent, {
           // ignore the sigma graph
           filter: (el) =>
-            el.className !== 'container' &&
+            el.className !== 'graphContainer' &&
             el.className !== 'zoomBtnWrapper' &&
             el.className !== 'searchFunctionDiv',
         });

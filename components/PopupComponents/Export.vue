@@ -35,6 +35,7 @@ import type { Graph } from '~/types/graph';
 
 const props = defineProps({
   activeTab: { type: Number, default: 0 },
+  effectConcept: { type: String },
 });
 
 const emit = defineEmits(['closeModal']);
@@ -54,6 +55,7 @@ const optionList: Ref<OptionType[]> = ref([
   { value: 'jpg', name: 'jpg' },
   { value: 'svg', name: 'svg' },
   { value: 'pdf', name: 'pdf' },
+  { value: 'causalPower', name: 'causalPower'},
 ]);
 const exportTypes: Ref<OptionType[]> = ref([]);
 
@@ -90,6 +92,20 @@ function downloadUrls(urls: UrlString[]): void {
       // This means that the image is scaled to 300 width
       pdfLink.addImage(url.url, 'jpg', 0, 0, 300, 0);
       pdfLink.save(`${graphName.value}.pdf`);
+      return;
+    }
+    if (type === 'causalPower') {
+      const id = scriptStore.graphIds[props.activeTab];
+      const graphName = scriptStore.graphs[id].name;
+
+      const link = document.createElement('a');
+      link.href = url.url;
+      link.target = '_blank';
+      link.download = `${graphName}-CausalPower-${props.effectConcept}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       return;
     }
     // when type is nodelist or edgelist set it after the graphname.

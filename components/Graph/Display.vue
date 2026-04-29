@@ -2,12 +2,13 @@
 It is distributed under the GPL 3.0 open source license.-->
 
 <template lang="pug">
-.container(ref='container')
+.graphDisplayContainer
+  .graphContainer(ref='container')
 
 GraphLegend(
   v-if='globalStore.visualSettings.showLegend.enabled',
   :tab='props.tab',
-  @color-changed='refresh()'
+  @color-changed='processColorChange'
 ) 
 
 .searchFunctionDiv
@@ -54,27 +55,22 @@ import Sigma from 'sigma';
 import type { NodeDisplayData } from 'sigma/types';
 import type Graphology from 'graphology';
 import chroma from 'chroma-js';
-import NodeProgram from 'sigma/rendering/webgl/programs/node.js';
-import { createNodeCompoundProgram } from 'sigma/rendering/webgl/programs/common/node';
-import type { NodeBorderDisplayData } from '@/types/display';
 
 // baked-in node and edgelist from rutte/testingutils
+import { createNodeBorderProgram } from '@sigma/node-border';
+import _ from 'lodash';
+import { DirectedGraph } from 'graphology';
+import { createEdgeCurveProgram } from '@sigma/edge-curve';
 import { edges } from '@/assets/json/edges';
 import { nodes } from '@/assets/json/nodes';
 
-// program for rendering nodes
-import NodeBorderProgram from '@/assets/programs/node.border';
-
 // pinia stores
-import { useScriptStore } from '@/stores/scriptStore';
-import { useGraphStore } from '@/stores/graphStore';
 import type { Graph } from '~/types/graph';
 import {
   paradigmsToNodeColor,
   edgeValueToEdgeColor,
-  calcEdgeSize,
-  calcNodeSize,
   signSymbol,
+  evaluateConceptValueToColor,
 } from '~/scripts/utils';
 
 const props = defineProps({
@@ -89,40 +85,83 @@ const globalStore = useGlobalStore();
 const showAttributeDisplay = ref(false);
 const attributePos = ref([0, 0]);
 const attributeValues = ref({});
-
-// watcher for refreshing the graph to a new graph
-watch(
-  () => props.tab,
-  async () => {
+defineExpose({
+  forceReload: async () => {
     globalStore.loading = true;
-    sigma.value?.kill();
     await makeGraph().finally(() => {
       edgeWeights.value = {};
-      fillSuggestions();
-      sigma.value?.refresh();
       globalStore.loading = false;
     });
-    if (searchBar.value) searchBar.value.value = '';
   },
-);
+  cancelRender: () => {
+    // TODO: Currently not implemented, should be implemented in the future
+    // graphStore.cancelRender();
+    globalStore.loading = false;
+  },
+  switchTab: async (tabIndex: number) => {
+    globalStore.loading = true;
+    scriptStore.graphs[graph.getAttribute('graphId')].graphologyGraph = graph;
 
-// watcher for enabled scripts that change graph display
-watch(globalStore.scriptSettings, () => {
-  edgeWeights.value = {};
-  sigma.value?.refresh();
-});
+    // Unbind sigma in the data set.
+    scriptStore.graphs[graph.getAttribute('graphId')].sigmaGraph = undefined;
 
-watch(globalStore.legendSettings, () => {
-  sigma.value?.refresh();
+    state = { isDragging: false, hasDragged: false };
+
+    const id = scriptStore.graphIds[tabIndex];
+    const graphData = scriptStore.getGraphs()[id];
+    if (graphData.graphologyGraph) {
+      graph = graphData.graphologyGraph;
+      sigma.setGraph(graph);
+      graphData.graphologyGraph = graph;
+      graphData.sigmaGraph = sigma;
+    } else {
+      graph = await graphStore.createGraph(graphData);
+      sigma.setGraph(graph);
+      graph.setAttribute('graphId', graphData.id);
+      graphData.graphologyGraph = graph;
+      graphData.sigmaGraph = sigma;
+    }
+    fillSuggestions();
+    if (searchBar.value) searchBar.value.value = '';
+    globalStore.loading = false;
+  },
+  fitGraph: () => {
+    const graph = sigma.getGraph();
+    const camera = sigma.getCamera();
+
+    // Compute graph bounds manually
+    let xMin = Infinity;
+    let xMax = -Infinity;
+    let yMin = Infinity;
+    let yMax = -Infinity;
+
+    graph.forEachNode((nodeKey) => {
+      const { x, y } = sigma.getNodeDisplayData(nodeKey)!;
+      xMin = Math.min(xMin, x);
+      xMax = Math.max(xMax, x);
+      yMin = Math.min(yMin, y);
+      yMax = Math.max(yMax, y);
+    });
+
+    // Compute the center of the graph
+    const centerX = (xMin + xMax) / 2;
+    const centerY = (yMin + yMax) / 2;
+
+    // Set the camera state to fit the graph
+    camera.setState({
+      x: centerX,
+      y: centerY,
+      ratio: 1.2,
+    });
+  },
 });
 
 const { darkMode } = storeToRefs(globalStore);
 watch(darkMode, () => {
-  sigma.value?.setSetting('labelColor', { color: darkMode.value === true ? 'white' : 'black' });
-  sigma.value?.refresh();
+  sigma.setSetting('labelColor', { color: darkMode.value === true ? 'white' : 'black' });
+  sigma.refresh();
 });
 
-window.addEventListener('resize', () => refresh());
 // retrieve DOM element
 
 // declare state
@@ -140,9 +179,10 @@ interface SigmaState {
   allSuggestions?: Set<string>;
 }
 
-const sigma: Ref<Sigma | undefined> = ref(undefined);
+// Sigma3 uses a watcher on the grapholgy opject so no need to create a new one every time.
+let graph: Graphology = new DirectedGraph();
+let sigma: Sigma;
 let state: SigmaState;
-let graph: Graphology;
 
 // retrieve DOM element
 const container = ref();
@@ -157,12 +197,57 @@ const suggestions: Ref<HTMLDataListElement | undefined> = ref();
  * Function to refresh sigma after new color is picked in colorpicker
  */
 function refresh() {
-  sigma.value?.refresh();
+  sigma.refresh();
+}
+
+/**
+ * Refreshes the color data for the graph, will auto refresh sigma.
+ * @param colors Event prop with new colors
+ */
+function processColorChange(colors: Record<string, { color: string }>) {
+  graph.mapEdges((edge) => {
+    const edgeData = graph.getEdgeAttributes(edge);
+    const color = edgeValueToEdgeColor(
+      {
+        positiveEdgeColor: colors.positiveEdge?.color,
+        negativeEdgeColor: colors.negativeEdge?.color,
+        neutralEdgeColor: colors.neutralEdge?.color,
+      },
+      edgeData.value,
+    );
+
+    graph.setEdgeAttribute(edge, 'color', color);
+  });
+  graph.mapNodes((node) => {
+    const nodeData = graph.getNodeAttributes(node);
+    const color = evaluateConceptValueToColor(nodeData.evaluation.value ?? 0, {
+      positive: colors.positiveEdge?.color,
+      negative: colors.negativeEdge?.color,
+      neutral: colors.neutralEdge?.color,
+    });
+    const paradigmColor = paradigmsToNodeColor(
+      {
+        paradigmA: colors.paradigmA?.color,
+        paradigmB: colors.paradigmB?.color,
+        noParadigm: colors.noParadigm?.color,
+      },
+      nodeData.paradigmA,
+      nodeData.paradigmB,
+    );
+
+    graph.setNodeAttribute(node, 'borderColorEval', color);
+    graph.setNodeAttribute(node, 'colorEval', paradigmColor);
+  });
+
+  sigma.scheduleRefresh({
+    layoutUnchange: true,
+  });
 }
 /**
  * Adds label data to datalist element
  */
 function fillSuggestions() {
+  suggestions.value!.innerHTML = '';
   if (suggestions.value)
     suggestions.value.innerHTML = graph
       .nodes()
@@ -189,7 +274,7 @@ function setSearchQuery(query: string) {
   // If the query is empty, then we reset the clickedNode / suggestions state:
   else state.allSuggestions = undefined;
 
-  sigma.value?.refresh();
+  sigma.refresh();
 }
 /**
  * initialises the sigma instance
@@ -204,24 +289,11 @@ async function makeGraph() {
     const id = scriptStore.graphIds[props.tab];
     graphData = scriptStore.getGraphs()[id];
   }
-
   graph = await graphStore.createGraph(graphData);
-  sigma.value = new Sigma(graph, container.value as HTMLElement, {
-    nodeProgramClasses: {
-      border: createNodeCompoundProgram([NodeProgram, NodeBorderProgram]),
-    },
-    allowInvalidContainer: true,
-    labelRenderedSizeThreshold: 0,
-    labelDensity: 10,
-    labelSize: 9,
-    enableEdgeHoverEvents: true,
-    renderEdgeLabels: false,
-    labelRenderer: graphStore.drawLabelWithInstruments,
-    hoverRenderer: graphStore.drawHoverWithInstruments,
-    labelColor: { color: darkMode.value ? 'white' : 'black' },
-  });
-
-  graphData.sigmaGraph = sigma.value;
+  graph.setAttribute('graphId', graphData.id);
+  sigma.setGraph(graph);
+  graphData.graphologyGraph = graph;
+  graphData.sigmaGraph = sigma;
 
   // watcher for enabled scripts that change graph display
   watch(
@@ -234,7 +306,7 @@ async function makeGraph() {
     () => {
       if (state.clickedNode) updateClickedNeighbours(state.clickedNode);
       edgeWeights.value = {};
-      sigma.value?.refresh();
+      sigma.refresh();
     },
   );
 
@@ -305,37 +377,38 @@ async function makeGraph() {
   //  - save the dragged node in the state
   //  - hide the node
   //  - disable the camera so its state is not updated
-  sigma.value.on('downNode', (e) => {
+  sigma.on('downNode', (e) => {
     // select the node
     state.isDragging = true;
     state.draggedNode = e.node;
     graph.setNodeAttribute(state.draggedNode, 'hideed', true);
   });
-  sigma.value.on('clickNode', (e) => {
+  sigma.on('clickNode', (e) => {
     if (!state.hasDragged) {
       state.clickedNode = e.node;
       updateClickedNeighbours(e.node);
+      sigma.scheduleRefresh({ layoutUnchange: true });
     }
     state.hasDragged = false;
   });
-  sigma.value.on('enterEdge', (e) => {
+  sigma.on('enterEdge', (e) => {
     state.hoveredEdge = e.edge;
     updateWeightDisplayDiv(e.event.x, e.event.y);
     bringEdgeToFront(e.edge); // hide the hovered edge
-    sigma.value?.refresh();
+    sigma.refresh();
   });
 
-  sigma.value.on('enterNode', (e) => {
+  sigma.on('enterNode', (e) => {
     state.hoveredNode = e.node;
     updateAttributeDisplay(e.event.x, e.event.y);
     showAttributeDisplay.value = true;
-    sigma.value?.refresh();
+    sigma.refresh();
   });
 
-  sigma.value.on('leaveNode', () => {
+  sigma.on('leaveNode', () => {
     state.hoveredEdge = undefined;
     showAttributeDisplay.value = false;
-    sigma.value?.refresh();
+    sigma.refresh();
   });
 
   // leaveEdge executes when the mouse leaves the whole canves or leaves an edge,
@@ -343,15 +416,15 @@ async function makeGraph() {
   container.value?.addEventListener('mouseleave', () => {
     leaveEdge();
   });
-  sigma.value.on('leaveEdge', () => {
+  sigma.on('leaveEdge', () => {
     leaveEdge();
   });
   // On mouse move, if the drag mode is enabled, we change the position of the draggedNode
-  sigma.value.getMouseCaptor().on('mousemovebody', (e) => {
+  sigma.getMouseCaptor().on('mousemovebody', (e) => {
     updateWeightDisplayDiv(e.x, e.y);
     if (!state.isDragging || !state.draggedNode) return;
     // Get new position of node
-    const pos = sigma.value?.viewportToGraph(e) ?? { x: 0, y: 0 };
+    const pos = sigma.viewportToGraph(e) ?? { x: 0, y: 0 };
 
     if (
       // position changed, then don't select node
@@ -370,7 +443,7 @@ async function makeGraph() {
   });
 
   // On mouse up, we reset the autoscale and the dragging mode
-  sigma.value.getMouseCaptor().on('mouseup', () => {
+  sigma.getMouseCaptor().on('mouseup', () => {
     if (state.draggedNode) {
       graph.removeNodeAttribute(state.draggedNode, 'hideed');
     }
@@ -379,66 +452,52 @@ async function makeGraph() {
   });
 
   // Disable the autoscale at the first down interaction
-  sigma.value.getMouseCaptor().on('mousedown', () => {
-    if (!sigma.value?.getCustomBBox()) sigma.value?.setCustomBBox(sigma.value.getBBox());
+  sigma.getMouseCaptor().on('mousedown', () => {
+    if (!sigma.getCustomBBox()) sigma.setCustomBBox(sigma.getBBox());
   });
 
-  sigma.value.getCamera().on('updated', () => sigma.value?.refresh());
-
-  sigma.value.on('clickStage', () => {
+  sigma.on('clickStage', () => {
     if (!state.hasDragged) {
       state.clickedNode = undefined;
       state.clickedNeighbors = undefined;
+      sigma.scheduleRefresh({ layoutUnchange: true });
     }
     state.hasDragged = false;
   });
   // Disable zoom on double click
-  sigma.value.on('doubleClickStage', (event) => {
+  sigma.on('doubleClickStage', (event) => {
     event.event.preventSigmaDefault();
     if (state.clickedNode) {
       state.clickedNode = undefined;
       state.clickedNeighbors = undefined;
     }
   });
-  sigma.value.on('doubleClickNode', (event) => {
+  sigma.on('doubleClickNode', (event) => {
     event.event.preventSigmaDefault();
   });
 
   // Determine rendering properties of nodes
-  sigma.value.setSetting('nodeReducer', (node, data) => {
-    const res: Partial<NodeBorderDisplayData> = { ...data };
-    const nodeSize = calcNodeSize(
-      globalStore.visualSettings.scaleNodesByDegrees.enabled,
-      data.degrees,
-    );
-    // information needs to be put in graphology as well to enable exporting
-    sigma.value?.getGraph().setNodeAttribute(node, 'instrName', data.instrument?.name);
-    sigma.value?.getGraph().setNodeAttribute(node, 'instrValue', data.instrument?.value);
-    sigma.value?.getGraph().setNodeAttribute(node, 'degrees', data.degrees);
-    sigma.value?.getGraph().setNodeAttribute(node, 'size', nodeSize);
-    res.size = nodeSize;
+  sigma.setSetting('nodeReducer', (node, data) => {
+    const res = { ...data };
 
-    // We want to color nodes by paradigm only if paradigm support is enabled
-    res.color = paradigmsToNodeColor(graphData, data.paradigmA, data.paradigmB);
+    if (globalStore.visualSettings.scaleNodesByDegrees.enabled) {
+      res.size = data.sizeDegree;
+    }
 
     // We want to color node borders by evaluate-concepts if it is enabled
     if (globalStore.scriptSettings.evaluateConcepts.enabled) {
-      res.borderColor =
-        data.value && data.value > 0
-          ? graphData.settings.legend.positiveEdge.color
-          : data.value && data.value < 0
-            ? graphData.settings.legend.negativeEdge.color
-            : undefined;
+      res.borderColor = data.borderColorEval;
     } else {
       res.borderColor = undefined;
     }
-    sigma.value
-      ?.getGraph()
-      .setNodeAttribute(
-        node,
-        'borderColor',
-        globalStore.scriptSettings.evaluateConcepts.enabled ? res.borderColor : undefined,
-      );
+
+    // We want to color node by paradigm support if it is enabled
+    if (globalStore.scriptSettings.paradigmSupport.enabled) {
+      res.color = data.colorEval;
+    } else {
+      res.color = undefined;
+    }
+
     const hasNode = state.clickedNeighbors
       ? [...state.clickedNeighbors].reduce(
           (pr, [from, to]) =>
@@ -478,21 +537,8 @@ async function makeGraph() {
   });
 
   // Determine rendering properties of edges
-  sigma.value.setSetting('edgeReducer', (edge, data) => {
-    const weightString = signSymbol(data.value) + data.weight.toString();
+  sigma.setSetting('edgeReducer', (edge, data) => {
     const res: Partial<NodeDisplayData> = { ...data };
-    res.color = edgeValueToEdgeColor(graphData, data.value);
-    const edgeSize: number = !globalStore.visualSettings.scaleEdgesByWeight.enabled
-      ? 2
-      : calcEdgeSize(data.weight, data.maxWeight, data.minWeight);
-    // information needs to be in graphology for export functionality
-
-    sigma.value?.getGraph().setEdgeAttribute(edge, 'value', data.value);
-    sigma.value?.getGraph().setEdgeAttribute(edge, 'weight', data.weight);
-    sigma.value?.getGraph().setEdgeAttribute(edge, 'minWeight', data.minWeight);
-    sigma.value?.getGraph().setEdgeAttribute(edge, 'maxWeight', data.maxWeight);
-
-    res.size = edgeSize;
 
     if (
       state.allSuggestions &&
@@ -513,6 +559,7 @@ async function makeGraph() {
         res.hidden = true;
       }
     }
+    const weightString = "W: " + data.weight.toString() + "  S: " + data.summedWeight.toString();
     // darken edge if hovered
     if (state.hoveredEdge === edge) {
       weightToShow.value = weightString;
@@ -521,21 +568,25 @@ async function makeGraph() {
         .hex();
       weightDisplayDiv.value.style.color = res.color;
     }
+
+    if (globalStore.visualSettings.scaleEdgesByWeight.enabled) {
+      res.size = data.sizeWeight;
+    }
     // calculate middle off edge
-    if (globalStore.visualSettings.showEdgeWeights.enabled && sigma.value) {
+    if (globalStore.visualSettings.showEdgeWeights.enabled) {
       const sourceX = graph.getNodeAttribute(graph.source(edge), 'x');
       const sourceY = graph.getNodeAttribute(graph.source(edge), 'y');
       const targetX = graph.getNodeAttribute(graph.target(edge), 'x');
       const targetY = graph.getNodeAttribute(graph.target(edge), 'y');
 
-      const pos = sigma.value.graphToViewport({
+      const pos = sigma.graphToViewport({
         x: (sourceX + targetX) / 2,
         y: (sourceY + targetY) / 2,
       });
 
       edgeWeights.value[edge] = {
         weight: edge !== state.hoveredEdge && !res.hidden ? weightString : '',
-        color: res.color,
+        color: data.color,
         x: pos.x,
         y: pos.y,
       };
@@ -578,28 +629,14 @@ async function makeGraph() {
       hideWeightDisplay(); // make the weightDisplayDiv invisible
     }
   }
-  /**
-   * updates the text and positon of the instrument display div
-   * @param xMouse position of the mouse
-   * @param yMouse position of the mouse
-   */
-  function updateAttributeDisplay(xMouse: number, yMouse: number) {
-    if (state.hoveredNode) {
-      const attributes = graphData.nodes[state.hoveredNode];
-      attributeValues.value = attributes;
-      attributePos.value[0] = xMouse;
-      attributePos.value[1] = yMouse;
-    } else {
-      showAttributeDisplay.value = false;
-    }
-  }
+
   /**
    * This function deselects an edge and hides the weight display
    */
   function leaveEdge() {
     state.hoveredEdge = undefined;
     hideWeightDisplay();
-    sigma.value?.refresh();
+    sigma.refresh();
   }
   /**
    * sets the weight display div's visibility to 'hidden'
@@ -611,13 +648,87 @@ async function makeGraph() {
   }
 }
 
+/**
+ * updates the text and positon of the instrument display div
+ * @param xMouse position of the mouse
+ * @param yMouse position of the mouse
+ */
+function updateAttributeDisplay(xMouse: number, yMouse: number) {
+  if (state.hoveredNode) {
+    const graphId = graph.getAttribute('graphId');
+    const graphData = scriptStore.getGraphs()[graphId];
+
+    const attributes = graphData.nodes[state.hoveredNode];
+    attributeValues.value = attributes;
+    attributePos.value[0] = xMouse;
+    attributePos.value[1] = yMouse;
+  } else {
+    showAttributeDisplay.value = false;
+  }
+}
+
+const borderProgram = createNodeBorderProgram({
+  borders: [
+    {
+      size: {
+        attribute: 'borderSize',
+        defaultValue: 0.3,
+        mode: 'relative',
+      },
+      color: {
+        attribute: 'borderColor',
+        defaultValue: 'gray',
+      },
+    },
+    {
+      size: {
+        attribute: 'size',
+        defaultValue: 1,
+        mode: 'relative',
+      },
+      color: {
+        attribute: 'color',
+        defaultValue: 'gray',
+      },
+    },
+  ],
+});
 onMounted(async () => {
   globalStore.loading = true;
+  sigma = new Sigma(graph, container.value as HTMLElement, {
+    nodeProgramClasses: {
+      bordered: borderProgram,
+    },
+    edgeProgramClasses: {
+      curved: createEdgeCurveProgram({
+        curvatureAttribute: 'curvature',
+        defaultCurvature: 0.02,
+        arrowHead: {
+          lengthToThicknessRatio: 2.5,
+          widenessToThicknessRatio: 2,
+        },
+      }),
+    },
+    allowInvalidContainer: true,
+    labelRenderedSizeThreshold: 0,
+    labelDensity: 8,
+    labelSize: 12,
+    labelGridCellSize: 25,
+    enableEdgeEvents: true,
+    renderEdgeLabels: false,
+    defaultDrawNodeLabel: graphStore.drawLabelWithInstruments, // graphStore.drawLabelWithWrapping,
+    defaultDrawNodeHover: graphStore.drawHoverWithInstruments,
+    labelColor: {
+      color: darkMode.value ? 'white' : 'black',
+    },
+  });
   await makeGraph().then(() => {
+    sigma.setGraph(graph);
     globalStore.loading = false;
     // HACK: Changes order of sigma canvasses to make sure weighted degree values are drawn on top of hover nodes
     const graphContent: HTMLElement | null = document.querySelector('.mainGraphContent');
-    const container: HTMLElement | undefined | null = graphContent?.querySelector('.container');
+    const container: HTMLElement | undefined | null =
+      graphContent?.querySelector('.graphContainer');
     const labelCanvas: HTMLCanvasElement | undefined | null =
       container?.querySelector('.sigma-labels');
     const mouseCanvas: HTMLCanvasElement | undefined | null =
@@ -626,13 +737,19 @@ onMounted(async () => {
     if (labelCanvas && mouseCanvas) container?.insertBefore(labelCanvas, mouseCanvas);
 
     fillSuggestions();
+    window.addEventListener('resize', () => refresh());
   });
+});
+
+onBeforeUnmount(() => {
+  sigma.kill();
+  window.removeEventListener('resize', () => refresh());
 });
 </script>
 <style lang="scss">
-.container {
-  width: 100%;
-  height: 100%;
+.graphContainer {
+  width: 80vw;
+  height: 80vh;
 }
 .attributes,
 .searchFunctionDiv,

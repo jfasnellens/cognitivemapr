@@ -1,12 +1,12 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import upload from '../pages/upload.vue';
+import upload from '../../pages/upload.vue';
 import { useFileStore } from '@/stores/fileStore';
 
 describe('Upload page', () => {

@@ -266,4 +266,30 @@ describe('Script Store - Evaluate Concepts', () => {
 
     expect(evaluatedGraph.nodes[1].evaluation.value).toBe(1);
   });
+  
+  it("Uses input values for evaluation of a cycle that's an end goal", () => {
+    const scriptStore = useScriptStore();
+
+    const graph = graphutils.graphY(); // Graph with stable cycle as end goal
+    const builtGraph = scriptStore.buildGraph(graph.edges, graph.nodes);
+    const evaluatedGraph = scriptStore.evaluateConcepts(builtGraph.id!);
+
+    expect(evaluatedGraph.nodes[1].evaluation.value).toBe(1);
+    expect(evaluatedGraph.nodes[2].evaluation.value).toBe(1);
+    expect(evaluatedGraph.nodes[3].evaluation.value).toBe(1);
+    expect(evaluatedGraph.nodes[4].evaluation.value).toBe(1);
+  });
+  
+  it("Uses user values for evaluation of an uncycle that's an end goal", () => {
+    const scriptStore = useScriptStore();
+
+    const graph = graphutils.graphZ(); // Graph with stable cycle as end goal
+    const builtGraph = scriptStore.buildGraph(graph.edges, graph.nodes);
+    const evaluatedGraph = scriptStore.evaluateConcepts(builtGraph.id!);
+
+    expect(evaluatedGraph.nodes[1].evaluation.value).toBe(0);
+    expect(evaluatedGraph.nodes[2].evaluation.value).toBe(-1);
+    expect(evaluatedGraph.nodes[3].evaluation.value).toBe(-1);
+    expect(evaluatedGraph.nodes[4].evaluation.value).toBe(-1);
+  });
 });

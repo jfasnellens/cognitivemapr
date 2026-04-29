@@ -1,7 +1,7 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import * as papa from 'papaparse';
 import type { Edge, Node } from '../types/graph';
@@ -86,14 +86,15 @@ function _processRow(
  * @returns Array of nodes
  */
 export function convertObjToNodeList(parsedObj: Array<Record<string, string>>): Array<Node> {
-  return parsedObj.map((row) => _convertRowToNode(row));
+  return parsedObj.map((row, index) => _convertRowToNode(row, index));
 }
 /**
  * Helper function that converts one row into a node
  * @param row Row object to convert
+ * @param index Row index
  * @returns Node
  */
-function _convertRowToNode(row: Record<string, string>): Node {
+function _convertRowToNode(row: Record<string, string>, index: number): Node {
   const instrument = () => {
     const instr = row.instr || row.instrument || row.instruments;
     if (instr && instr !== 'NA') return { name: instr };
@@ -117,13 +118,22 @@ function _convertRowToNode(row: Record<string, string>): Node {
     return name;
   };
   const nodeValue = () => {
+    const parsedValue = parseInt(row.value);
     if (row.value === '' || row.value === 'NA') {
       return 0;
-    } else if (isNaN(parseInt(row.value))) {
+    } else if (isNaN(parsedValue)) {
       throw new ScriptError({
         from: 'Data parser',
         subComponent: 'Row to node converter',
-        message: 'Invalid node value found!',
+        message: `Invalid node value found! \nNode values must be numbers. \nRow Nr: ${index + 2}`,
+      });
+    } else if (parsedValue > 1 || parsedValue < -1) {
+      throw new ScriptError({
+        from: 'Data parser',
+        subComponent: 'Row to node converter',
+        message: `Invalid node value found! \nNode values may not be larger than 1 or smaller than -1. \nRow Nr: ${
+          index + 2
+        }`,
       });
     } else {
       return parseInt(row.value);
@@ -169,35 +179,6 @@ export function convertObjToEdgeList(
  * @returns Edge
  */
 function _convertRowToEdge(row: Record<string, string>, index: number): Partial<Edge> {
-  const mapDate = () => {
-    const mdate = row.map_date || row.mapdate || row.date;
-    if (!mdate) return undefined;
-    try {
-      if (mdate.split('-')[0].length > 2) {
-        return dayjs(row.map_date, 'YYYY-MM-DD').toISOString();
-      } else {
-        return dayjs(row.map_date, 'DD-MM-YYYY').toISOString();
-      }
-    } catch (error) {
-      throw new ScriptError({
-        from: 'Data parser',
-        subComponent: 'Date parser',
-        message: 'Invalid date format, be sure to use YYYY-MM-DD or DD-MM-YYYY',
-      });
-    }
-  };
-  const value = () => {
-    const value = row.edge_value || row.edgeValue || row.value;
-    if (!value)
-      throw new ScriptError({
-        from: 'Data parser',
-        subComponent: 'Edge builder',
-        message: `No edge value found! This is required in the edge list! \nRow Nr: ${
-          index + 2
-        }, \nFrom: ${row.from}, \nTo: ${row.to}`,
-      });
-    return parseInt(value);
-  };
   const from = () => {
     if (!row.from)
       throw new ScriptError({
@@ -209,6 +190,7 @@ function _convertRowToEdge(row: Record<string, string>, index: number): Partial<
       });
     return row.from;
   };
+
   const to = () => {
     if (!row.to)
       throw new ScriptError({
@@ -221,19 +203,153 @@ function _convertRowToEdge(row: Record<string, string>, index: number): Partial<
     return row.to;
   };
 
+  const value = () => {
+    const value = row.edge_value || row.edgeValue || row.value;
+
+    if (value !== "-1" && value !== "0" && value !== "1")
+      throw new ScriptError({
+        from: 'Data parser',
+        subComponent: 'Edge builder',
+        message: `Edge value is not a valid number. Make sure it is -1, 0 or 1 \nRow Nr: ${
+          index + 2
+        }, \nFrom: ${row.from}, \nTo: ${row.to}`,
+      });
+
+    return parseInt(value);
+  };
+
+  const weight = () => {
+    let value = row.weight;
+
+    // If any character is not a digit, the match will return "null".
+    // This also includes the separator of a float and the - sign of negative numbers.
+    // The value "0" is also removed by limiting the first character to 1-9.
+    if (!value.match("^[1-9]([0-9]*)$"))
+      throw new ScriptError({
+        from: 'Data parser',
+        subComponent: 'Edge builder',
+        message: `Edge weight is not a valid number. Make sure it is a positive integer. \nRow Nr: ${
+          index + 2
+        }, \nFrom: ${row.from}, \nTo: ${row.to}`,
+      });
+
+    return parseInt(value);
+  };
+
+  // This is commented out because we do no import of exported files.
+
+  // const posWeight = () => {
+  //   let value = row.positive_weight;
+  //   if (!value) return undefined;
+
+  //   // If any character is not a digit, the match will return "null".
+  //   // This also includes the separator of a float and the - sign of negative numbers.
+  //   // The value "0" is also removed by limiting the first character to 1-9.
+  //   if (!value.match("^[1-9]([0-9]*)$"))
+  //     throw new ScriptError({
+  //       from: 'Data parser',
+  //       subComponent: 'Edge builder',
+  //       message: `Edge positive weight is not a valid number. Make sure it is a positive integer. \nRow Nr: ${
+  //         index + 2
+  //       }, \nFrom: ${row.from}, \nTo: ${row.to}`,
+  //     });
+
+  //   return parseInt(value);
+  // };
+
+  // const neutWeight = () => {
+  //   let value = row.neutWeight;
+  //   if (!value) return undefined;
+
+  //   // If any character is not a digit, the match will return "null".
+  //   // This also includes the separator of a float and the - sign of negative numbers.
+  //   // The value "0" is also removed by limiting the first character to 1-9.
+  //   if (!value.match("^[1-9]([0-9]*)$"))
+  //     throw new ScriptError({
+  //       from: 'Data parser',
+  //       subComponent: 'Edge builder',
+  //       message: `Edge neightral weight is not a valid number. Make sure it is a positive integer. \nRow Nr: ${
+  //         index + 2
+  //       }, \nFrom: ${row.from}, \nTo: ${row.to}`,
+  //     });
+
+  //   return parseInt(value);
+  // };
+
+  // const negWeight = () => {
+  //   let value = row.negative_weight;
+  //   if (!value) return undefined;
+
+  //   // If any character is not a digit, the match will return "null".
+  //   // This also includes the separator of a float and the - sign of negative numbers.
+  //   // The value "0" is also removed by limiting the first character to 1-9.
+  //   if (!value.match("^[1-9]([0-9]*)$"))
+  //     throw new ScriptError({
+  //       from: 'Data parser',
+  //       subComponent: 'Edge builder',
+  //       message: `Edge negative weight is not a valid number. Make sure it is a positive integer. \nRow Nr: ${
+  //         index + 2
+  //       }, \nFrom: ${row.from}, \nTo: ${row.to}`,
+  //     });
+
+  //   return parseInt(value);
+  // };
+
+  //   const summedWeight = () => {
+  //   let value = row.weighted_value;
+  //   if (!value) return undefined;
+  //   // @TODO: verplaats alle errors naar utils en roep dan de bijbehorende functie hier weer aan. Blijven we consistent in benaming.
+
+  //   // If any character is not a digit, the match will return "null".
+  //   // This also includes the separator of a float and the - sign of negative numbers.
+  //   // The value "0" is also removed by limiting the first character to 1-9.
+  //   if (!value.match("^-?\d+$"))
+  //     throw new ScriptError({
+  //       from: 'Data parser',
+  //       subComponent: 'Edge builder',
+  //       message: `Weighted value is not a valid number. Make sure it is an integer. \nRow Nr: ${
+  //         index + 2
+  //       }, \nFrom: ${row.from}, \nTo: ${row.to}`,
+  //     });
+
+  //   return parseInt(value);
+  // };
+
+  const mapDate = () => {
+    const mdate = row.map_date || row.mapdate || row.date;
+    if (!mdate) return undefined;
+    try {
+      if (mdate.split('-')[0].length > 2) {
+        return dayjs(row.map_date, 'YYYY-MM-DD').toISOString();
+      } else {
+        return dayjs(row.map_date, 'DD-MM-YYYY').toISOString();
+      }
+    } catch (error) {
+      throw new ScriptError({
+        from: 'Data parser',
+        subComponent: 'Edge builder',
+        message: 'Invalid date format, be sure to use YYYY-MM-DD or DD-MM-YYYY',
+      });
+    }
+  };
+
   const edge: Partial<Edge> = {
     from: isNumeric(from()) ? parseInt(row.from) : undefined,
     to: isNumeric(to()) ? parseInt(row.to) : undefined,
     fromName: from(),
     toName: to(),
-    weight: row.weight ? parseInt(row.weight) : 1,
     edgeValue: value(),
+    weight: weight(),
     id: generateId(row.edge_id),
     mapId: row.map_id,
     mapDate: mapDate(),
     speaker: row.speaker,
-    valueX: row['value.x'] ? parseInt(row['value.x']) : undefined,
-    valueY: row['value.y'] ? parseInt(row['value.y']) : undefined,
   };
+
+  edge.posWeight = (edge.edgeValue === 1) ? edge.weight : 0;
+  edge.neutWeight = (edge.edgeValue === 0) ? edge.weight : 0;
+  edge.negWeight = (edge.edgeValue === -1) ? edge.weight : 0;
+  edge.summedWeight = edge.posWeight! - edge.negWeight!; // Because nothing is aggregated yet.
+  
   return edge;
 }

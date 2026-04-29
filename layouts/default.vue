@@ -4,21 +4,20 @@ It is distributed under the GPL 3.0 open source license.-->
 <template lang="pug">
 .layout-wrapper
   Navbar
-  UProgress(v-if="globalStore.loading", animation="swing", size="xs")
-  .progressLoadingPlaceholder(v-else, style="height: 2px")
+  UProgress(v-if='globalStore.loading', animation='swing', size='xs')
+  .progressLoadingPlaceholder(v-else, style='height: 2px')
   .content-wrapper
     slot
   UNotifications.whitespace-pre-wrap
 </template>
 <script setup lang="ts">
 const globalStore = useGlobalStore();
-globalStore.syncDarkMode();
-
+globalStore.syncColorMode();
 </script>
 <style lang="scss" scoped>
 .layout-wrapper {
   height: 100vh;
-  display:flex;
+  display: flex;
   flex-direction: column;
 }
 .content-wrapper {

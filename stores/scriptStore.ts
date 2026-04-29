@@ -1,7 +1,7 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 /* eslint-disable camelcase */
 import { defineStore, acceptHMRUpdate } from 'pinia';
@@ -14,18 +14,21 @@ import {
   replaceNodesScript,
 } from '~/scripts/buildGraph';
 import { evaluateConceptsScript } from '~/scripts/evaluateConcepts';
+import { causalPowerScript } from '~/scripts/causalPower';
 import { extractSpeakerScript, extractTimePeriodScript } from '~/scripts/filterGraph';
 import { instrumentSupportScript } from '~/scripts/instrumentSupport';
 import { ExportHumanCSV } from '~/exporters/exporthumancsv';
 import { ExportPNG } from '~/exporters/exportPng';
 import { ExportJPG } from '~/exporters/exportJpg';
-import { ExportSVG } from '~/exporters/exportsvg';
+import { ExportSVG } from '~/exporters/exportSVGV2';
 import { ExportPDF } from '~/exporters/exportPdf';
 import { readCSVScript, convertObjToEdgeList, convertObjToNodeList } from '~/scripts/parseCSV';
 import type { Edge, Graph, GraphSettings, ISODateString, Node, UUID } from '~/types/graph';
 import { ScriptError } from '~/types/errors';
-import type { OptionType, UrlString } from '~/types/exporter';
+import type { Exporter, OptionType, UrlString } from '~/types/exporter';
 import { EntryType } from '~/types/graph';
+import { ColorScheme } from '#build/components';
+import { ExportCausalPowerCsv } from '~/exporters/exportCausalPowerCsv';
 
 export const useScriptStore = defineStore('scriptStore', () => {
   // Record of graphs to remember
@@ -36,6 +39,8 @@ export const useScriptStore = defineStore('scriptStore', () => {
   const nodesRequiringValues: Ref<Record<string, Array<{ node: Node; values: number[] }>>> = ref(
     {},
   );
+  const graphNodesValueName: Ref<Array<OptionType>> = ref([]);
+  const causalPowerNodes: Ref<Array<Array<string>>> = ref([]);
 
   /**
    * Function to retrieve the graph storage in its entirety.
@@ -70,7 +75,7 @@ export const useScriptStore = defineStore('scriptStore', () => {
       graph.settings = getDefaultSettings(graph.paradigmPair);
       graphs.value[UUID] = graph;
       if (warnings.length === 0)
-        globalStore.logSuccess({ message: 'Graph successfully build!', who: 'Graph builder' });
+        globalStore.logSuccess({ message: 'Graph successfully built!', who: 'Graph builder' });
       else
         warnings.forEach((warning) =>
           globalStore.logWarning({
@@ -208,6 +213,72 @@ export const useScriptStore = defineStore('scriptStore', () => {
     }
   }
 
+  
+
+  /**
+   * This function runs the evaluate_concepts script found in the scripts folder
+   * @param graphId GraphId to run the script in
+   * @returns Graph with the concepts evaluated within the data.
+   */
+  function causalPower(graphId: string, initialNode: number|UUID): Record<number|UUID, number> {
+    const inputGraph = graphs.value[graphId];
+    const graph = _.cloneDeep<Graph>(inputGraph); // Make sure the input graph is not modified, but a new one returned
+    try {
+      const backupGraph = _.cloneDeep<Graph>(graph); // Clone with no references
+      graphs.value[`${graphId}_causalPower_backup`] = backupGraph;
+      const CausalPowerTable = causalPowerScript(graph, initialNode);
+      return CausalPowerTable;
+    } catch (error) {
+      if (error instanceof ScriptError) {
+        globalStore.logError({
+          who: `${error.from} - ${error.subComponent}`,
+          message: error.message,
+        });
+      } else {
+        const err = error as Error;
+        globalStore.logError({ message: `Something went wrong during the calculation of the causal power.`, error: err });
+        
+        // Currently, cycles cause a maximum call stack error. This will be fixed later.
+        // Then, the previous error system may be put back.
+        //globalStore.logError({ message: err.message, error: err });
+        }
+      // Return empty table if an error occured
+      return {};
+    }
+  }
+
+  function updateCausalPowerNodes(graphId: string, initialNode: number|UUID): void {
+    const newCausalPowerNodes: Array<[string, string, string]> = [];
+
+    const causalPowerData = causalPower(graphId, initialNode);
+
+    const graph = _.cloneDeep<Graph>(graphs.value[graphId]); // Make sure the input graph is not modified, but a new one returned
+    const initialNodeName = graph.nodes[initialNode].nodeName;
+
+    for (const [key, value] of Object.entries(causalPowerData)) {
+      newCausalPowerNodes.push([graph.nodes[key].nodeName,value.toString(),initialNodeName]);
+    }
+
+    causalPowerNodes.value = newCausalPowerNodes;
+  }
+
+  function updateGraphNodeValueNames(graphId: string): void {
+    graphNodesValueName.value = [];
+    
+    const inputGraph = graphs.value[graphId];
+    const graph = _.cloneDeep<Graph>(inputGraph); // Make sure the input graph is not modified, but a new one returned
+
+    const nodes = graph.nodeArray;
+
+    const result: Array<OptionType> = [];
+
+    nodes.forEach((node) => {
+      result.push({ value: node.id.toString(), name: node.nodeName });
+    });
+
+    graphNodesValueName.value = result;
+  }
+
   /**
    * This function runs the extractSpeaker script found in the filterGraph script
    * @param graphId GraphId to run the script in
@@ -267,26 +338,6 @@ export const useScriptStore = defineStore('scriptStore', () => {
   }
 
   /**
-   * Converts a nodelist from a graph to CSV
-   * @param graphId Graph to convert from
-   * @returns CSV as string
-   */
-  function nodesToCSV(graphId: UUID) {
-    const exporter = new ExportHumanCSV(getGraphs()[graphId]);
-    return exporter.nodesToCSV();
-  }
-
-  /**
-   * Converts a edgelist from a graph to CSV
-   * @param graphId Graph to convert from
-   * @returns CSV as string
-   */
-  function edgesToCSV(graphId: UUID) {
-    const exporter = new ExportHumanCSV(getGraphs()[graphId]);
-    return exporter.edgesToCSV();
-  }
-
-  /**
    * Exports graph as url string in the preffered formats.
    * @param graph Graph to export to URL
    * @param types The types of the exports
@@ -296,12 +347,12 @@ export const useScriptStore = defineStore('scriptStore', () => {
     const urlList: UrlString[] = [];
     await Promise.all(
       types.map(async (type) => {
-        let exporter;
+        let exporter: Exporter;
         switch (type.value) {
           case 'csv': {
-            exporter = new ExportHumanCSV(graph);
-            const exp = await exporter.export();
-            // this is a special case because you get 2 urls.
+            exporter = new ExportHumanCSV();
+            const exp = await exporter.export(graph);
+            // This is a special case because you get 2 urls, which each receive a different type.
             urlList.push({ url: exp[0], type: 'Nodelist' });
             urlList.push({ url: exp[1], type: 'Edgelist' });
             break;
@@ -320,6 +371,10 @@ export const useScriptStore = defineStore('scriptStore', () => {
           }
           case 'pdf': {
             exporter = new ExportPDF();
+            break;
+          }
+          case 'causalPower': {
+            exporter = new ExportCausalPowerCsv(causalPowerNodes.value);
             break;
           }
         }
@@ -407,23 +462,26 @@ export const useScriptStore = defineStore('scriptStore', () => {
 
   return {
     buildGraph,
+    causalPower,
     evaluateConcepts,
     extractSpeaker,
     extractTimePeriod,
     paradigmSupport,
     getGraphs,
     instrumentSupport,
-    nodesToCSV,
-    edgesToCSV,
     exporter,
     readCSV,
     graphs,
     graphsRequiringValues,
     nodesRequiringValues,
+    causalPowerNodes,
     graphIds,
     generateNodesBasedOnEdges,
     resetGraph,
     getDefaultSettings,
+    updateCausalPowerNodes,
+    graphNodesValueName,
+    updateGraphNodeValueNames,
   };
 });
 

@@ -14,6 +14,17 @@ defineProps({
   optionsList: { type: Object as PropType<OptionType> },
 });
 
+defineExpose({
+  // This works because optionType doesnt find a match for the empty string.
+  resetOptionTypeValue: () => {
+    optionType.value = "";
+  },
+
+  setOptionTypeValue: (value: string) => {
+    optionType.value = value;
+  }
+});
+
 const optionType: Ref<string> = ref('graph');
 
 /**

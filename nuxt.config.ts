@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   ssr: false,
   devtools: {
-    enabled: false,
+    enabled: true,
     pages: true,
   },
   // build:{
@@ -24,6 +24,6 @@ export default defineNuxtConfig({
     },
   },
   colorMode: {
-    preference: 'light'
-  }
+    preference: 'light',
+  },
 });

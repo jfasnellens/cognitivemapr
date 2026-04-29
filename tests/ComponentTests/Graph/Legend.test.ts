@@ -6,7 +6,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
-import Legend from '../components/Graph/Legend.vue';
+import Legend from '../../../components/Graph/Legend.vue';
 import { EntryType } from '~/types/graph';
 
 describe('Legend', () => {

@@ -19,6 +19,9 @@ export function evaluateConceptsScript(graph: Graph): Graph {
 
   const outgoingEdges: Record<number | UUID, Array<number | UUID>> = listOutgoingEdges(); // Maps each node to its outgoing edges
 
+  // Default value. Will be updated during evaluation if a cycle is found
+  graph.hasCycle = false;
+
   // The actual calculation of each node's value
   graph.nodeArray.forEach((node) => {
     node.evaluation.value = evaluateNode(node);
@@ -37,6 +40,7 @@ export function evaluateConceptsScript(graph: Graph): Graph {
     if (node.id in nodeValues) {
       return nodeValues[node.id]!;
     } else if (onCycle(node)) {
+      graph.hasCycle = true;
       evaluateCycle(node);
       return nodeValues[node.id]!;
     } else {
@@ -80,7 +84,7 @@ export function evaluateConceptsScript(graph: Graph): Graph {
       // Sum the values of destinations * edge values
       outgoingEdges[node.id].forEach((edgeid) => {
         edge = graph.edges[edgeid];
-        sum += edge.edgeValue * edge.weight * evaluateNode(graph.nodes[edge.to]);
+        sum += edge.summedWeight * evaluateNode(graph.nodes[edge.to]);
       });
       return getSign(sum); // Turn the sum into a value that is simply positive (1), negative (-1), or arbitrary (0)
     }
@@ -173,10 +177,19 @@ export function evaluateConceptsScript(graph: Graph): Graph {
    */
   function evaluateCycle(cycleNode: Node): void {
     const cycleNodes: Array<Node> = scoutCycleComplex(cycleNode); // All nodes that need to be processed in this cycle evaluation
-    cycleNodes.forEach((node: Node) => {
-      // For the evaluation, we prevent the eternal loop by assuming a neutral value before evaluating the cycle further
-      nodeValues[node.id] = 0;
-    });
+
+    // For the evaluation, we prevent the eternal loop by assuming a neutral value before evaluating the cycle further
+    // However, if the cycle forms an end goal, the input value should be used, rather than an ambiguous value
+    if (CycleIsEndGoal(cycleNodes)) {
+      cycleNodes.forEach((node: Node) => {
+        nodeValues[node.id] = node.evaluation.inputValue;
+      });        
+    }
+    else {
+      cycleNodes.forEach((node: Node) => {
+        nodeValues[node.id] = 0;
+      });      
+    }
 
     const iterations: Array<Record<number | UUID, number>> = []; // Keeps track of all evaluation iterations, in chronological order
     const iterationIndices: Record<string, number> = {}; // Makes sure that the position of an iteration in the 'iterations' list can be found efficiently
@@ -314,5 +327,21 @@ export function evaluateConceptsScript(graph: Graph): Graph {
       });
     }
     return cycleNodes;
+  }
+
+  function CycleIsEndGoal(
+    cycleNodes: Array<Node>
+  ): boolean {
+    let outgoingFound = false;
+    cycleNodes.forEach((node: Node) => {
+      outgoingEdges[node.id].forEach((edgeID: number | UUID) => {
+        const edge: Edge = graph.edges[edgeID];
+        if (!nodesOnCycle[edge.to]) // Then an edge going out of the cycle is found, meaning the cycle is not the end goal
+        {
+          outgoingFound = true;
+        }
+      })
+    })
+    return !outgoingFound;
   }
 }

@@ -19,7 +19,10 @@ It is distributed under the GPL 3.0 open source license.-->
 import type { OptionType } from '~/types/exporter';
 const emit = defineEmits(['optionClicked']);
 const props = defineProps({
-  optionsList: { type: Object as PropType<OptionType[]> },
+  optionsList: {
+    type: Object as PropType<OptionType[]>,
+    default: () => {},
+  },
 });
 
 const selected: Ref<string[]> = ref([]);

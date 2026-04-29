@@ -1,13 +1,13 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import { describe, it, expect } from 'vitest';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
 import { mount } from '@vue/test-utils';
-import Navbar from '../components/Navbar.vue';
-import Defaultbutton from '../components/Defaultbutton.vue';
+import Navbar from '../../components/Navbar.vue';
+import Defaultbutton from '../../components/Defaultbutton.vue';
 
 describe('Nav Bar', () => {
   it('created header', () => {

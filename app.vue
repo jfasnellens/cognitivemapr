@@ -7,7 +7,7 @@ NuxtLayout
 </template>
 <script setup lang="ts">
 const globalStore = useGlobalStore();
-globalStore.syncDarkMode();
+globalStore.syncColorMode();
 </script>
 <style lang="scss">
 html,

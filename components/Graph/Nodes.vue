@@ -8,9 +8,6 @@ It is distributed under the GPL 3.0 open source license.-->
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { useGlobalStore } from '@/stores/globalStore';
-import { useTableStore } from '@/stores/tableStore';
-import { useScriptStore } from '@/stores/scriptStore';
 
 const props = defineProps({
   tab: { type: Number, default: 0 },

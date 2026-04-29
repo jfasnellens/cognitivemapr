@@ -1,7 +1,7 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import { v4 as uuid } from 'uuid';
 import chroma from 'chroma-js';
@@ -51,8 +51,6 @@ export function isNumeric(str?: string): boolean {
   return /^-?\d+$/.test(str);
 }
 export const defaultNodeSize = ref(5);
-const maxEdgeSize = ref(7);
-const minEdgeSize = ref(2);
 /**
  * calculates the size this node should have
  * @param scaleByDegrees whether nodes are scaled by the number of degrees they have
@@ -64,63 +62,89 @@ export function calcNodeSize(scaleByDegrees: boolean, degrees: number) {
   else return defaultNodeSize.value;
 }
 /**
- * finds a line that crosses the points (maxWeight, maxEdgeSize) and (minWeight, minEdgeSize)
+ * Uses a line function to calculate the size of an edge based on its weight
  * @param weight - weight of the edge that size is being calculated for
- * @param maxWeight - largest weight of all edges
- * @param minWeight - smallest weight og all edges
  * @returns result of giving current edge weight as input to the calculated line function
  */
-export function calcEdgeSize(weight: number, maxWeight: number, minWeight: number) {
-  const intersect =
-    (maxEdgeSize.value - maxWeight * (minEdgeSize.value / minWeight)) / (-maxWeight + 1);
-  const growthRate = minEdgeSize.value - intersect;
-
-  return weight * growthRate + intersect;
+export function calcEdgeSize(weight: number) {
+  return 1 / (-(weight + 5) * (1 / 100)) + 20;
 }
-const globalStore = useGlobalStore();
 
 /**
  * Decides which color a node should have based on the values of it's paradigms
- * @param graphData the graph object on for which the edges are being calculated
- * @param paradigmA the first paradigm
- * @param paradigmB the second paradigm
+ * @param colors object with colors
+ * @param colors.paradigmA the first paradigm color
+ * @param colors.paradigmB the second paradigm color
+ * @param colors.noParadigm the color for nodes without paradigms
+ * @param paradigmA the value of the first paradigm
+ * @param paradigmB the value of the second paradigm
  * @returns the color this node should be
  */
 export function paradigmsToNodeColor(
-  graphData: Graph,
-  paradigmA: number,
-  paradigmB: number,
+  colors: { paradigmA: string; paradigmB: string; noParadigm: string },
+  paradigmA?: number,
+  paradigmB?: number,
 ): string {
   let result: string;
+  const globalStore = useGlobalStore();
   // We want to color nodes by paradigm only if paradigm support is enabled
   if (globalStore.scriptSettings.paradigmSupport.enabled) {
     result =
       paradigmA && paradigmA > 0
-        ? graphData.settings.legend.paradigmA.color
+        ? colors.paradigmA
         : paradigmB && paradigmB > 0
-          ? graphData.settings.legend.paradigmB.color
-          : graphData.settings.legend.noParadigm.color;
+          ? colors.paradigmB
+          : colors.noParadigm;
   } else {
-    result = graphData.settings.legend.noParadigm.color;
+    result = colors.noParadigm;
   }
   return result;
 }
 /**
  * returns the edge color belonging to the value of an edge
- * @param graphData the graph object on for which the edges are being calculated
+ * @param colorData Object with edge color data.
+ * @param colorData.positiveEdgeColor the color of positive edges
+ * @param colorData.negativeEdgeColor the color of negative edges
+ * @param colorData.neutralEdgeColor the color of neutral edges
  * @param value the value of the edge, 1, 0 or -1
  * @returns a hex string for the color of this edge
  */
-export function edgeValueToEdgeColor(graphData: Graph, value: number): string {
+export function edgeValueToEdgeColor(
+  colorData: { positiveEdgeColor: string; negativeEdgeColor: string; neutralEdgeColor: string },
+  value: number,
+): string {
   const initial =
     value > 0
-      ? graphData.settings.legend.positiveEdge.color
+      ? colorData.positiveEdgeColor
       : value < 0
-        ? graphData.settings.legend.negativeEdge.color
-        : graphData.settings.legend.neutralEdge.color;
+        ? colorData.negativeEdgeColor
+        : colorData.neutralEdgeColor;
 
   return chroma(initial).brighten(1.5).hex();
 }
+
+/**
+ * Converts an evaluation value to a color
+ * @param value value form the evaluation
+ * @param colors object with colors
+ * @param colors.positive positive color
+ * @param colors.negative negative color
+ * @param colors.neutral neutral color
+ * @returns hex color
+ */
+export function evaluateConceptValueToColor(
+  value: number,
+  colors: { positive: string; negative: string; neutral: string },
+) {
+  if (value < 0) {
+    return colors.negative;
+  }
+  if (value > 0) {
+    return colors.positive;
+  }
+  return colors.neutral;
+}
+
 /**
  * computes the the normalized version of a given vector
  * @param v the input vector
@@ -155,10 +179,10 @@ export function signSymbol(x: number): string {
  * @returns Name of the node
  */
 export function nodeIdToName(graph: Graph, id: string): string {
-  if (!isId(id)) return id;
   const nodes = graph.nodes;
   if (nodes[id]) {
     return nodes[id].nodeName;
   }
-  return 'Unknown node ID';
+  // In some contexts the given ID is actually the name of the node
+  return id;
 }

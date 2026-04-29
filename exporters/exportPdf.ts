@@ -62,7 +62,7 @@ export class ExportPDF implements Exporter {
       const mainCanvas = await toCanvas(mainGraphContent, {
         // ignore the sigma graph
         filter: (el) =>
-          el.className !== 'container' &&
+          el.className !== 'graphContainer' &&
           el.className !== 'zoomBtnWrapper' &&
           el.className !== 'searchFunctionDiv',
       });

@@ -1,7 +1,7 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 // auth.js
 import { defineStore, acceptHMRUpdate } from 'pinia';
@@ -14,6 +14,7 @@ export const useGlobalStore = defineStore('globalStore', () => {
   const colorBlindMode: Ref<boolean> = useCookie('colorBlindMode');
   const toast = useToast();
   const loading: Ref<boolean> = ref(false);
+  const appConfig = useAppConfig();
 
   const errorVisible: Ref<boolean> = ref(false);
   /**
@@ -33,7 +34,7 @@ export const useGlobalStore = defineStore('globalStore', () => {
     showAncestorsOnClick: { name: 'Show Ancestors of Clicked Node', enabled: true },
   });
   const visualSettings = ref({
-    showLegend: { name: 'Show Legend', enabled: true },
+    showLegend: { name: 'Show Legend', enabled: true, positionX: 10, positionY: 10 },
     showEdgeWeights: { name: 'Show Edge Weights', enabled: false },
     scaleEdgesByWeight: { name: 'Scale Edges by Weight', enabled: true },
     scaleNodesByDegrees: { name: 'Scale Nodes by Degrees', enabled: false },
@@ -44,8 +45,13 @@ export const useGlobalStore = defineStore('globalStore', () => {
   /**
    * Syncs dark mode upon initial app load troughout different components.
    */
-  function syncDarkMode() {
-    useColorMode().value = darkMode.value ? 'dark' : 'light';
+  function syncColorMode() {
+    if (darkMode.value) {
+      useColorMode().value = darkMode.value ? 'dark' : 'light';
+      appConfig.ui.primary = darkMode.value ? 'biscay' : 'mint-tulip';
+    } else if (colorBlindMode.value) {
+      appConfig.ui.primary = colorBlindMode.value ? 'anakiwa' : 'mint-tulip';
+    }
   }
   /**
    * Toggles darkmode across the program
@@ -54,6 +60,7 @@ export const useGlobalStore = defineStore('globalStore', () => {
    */
   function toggleDarkMode(val: boolean, updateColorMode = true) {
     darkMode.value = val;
+    appConfig.ui.primary = val ? 'biscay' : 'mint-tulip';
     if (val) updateColors('darkMode');
     else updateColors('light');
     if (updateColorMode) {
@@ -69,6 +76,7 @@ export const useGlobalStore = defineStore('globalStore', () => {
    */
   function toggleColorBlindMode(val: boolean, updateColorMode = true) {
     colorBlindMode.value = val;
+    appConfig.ui.primary = val ? 'anakiwa' : 'mint-tulip';
     if (val) updateColors('colorBlindMode');
     else updateColors('light');
     if (updateColorMode) {
@@ -277,7 +285,7 @@ export const useGlobalStore = defineStore('globalStore', () => {
   }
 
   return {
-    syncDarkMode,
+    syncColorMode,
     toggleDarkMode,
     darkMode,
     logWarning,

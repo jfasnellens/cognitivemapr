@@ -1,11 +1,11 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import { describe, it, test, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import SettingsPopUp from '../components/PopupComponents/Settings/SettingsPopUp.vue';
+import SettingsPopUp from '../../../components/PopupComponents/Settings/SettingsPopUp.vue';
 
 describe('SettingsPopUp', () => {
   it.each(['.settingPopupWrapper', '.content', '.left', '.right', '.close', 'button'])(

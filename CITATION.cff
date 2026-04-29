@@ -9,24 +9,14 @@ authors:
   orcid: "https://orcid.org/0009-0007-0755-6297"
 - family-names: "Dekker"
   given-names: "Maurice"
-- family-names: "de Gooijer"
-  given-names: "David"
-- family-names: "Lobée"
-  given-names: "Jan"
-- family-names: "Patist"
-  given-names: "Anne"
-- family-names: "van Riet"
-  given-names: "Nick"
 - family-names: "Rozendaal"
   given-names: "Thomas"
-- family-names: "Tichattibin"
-  given-names: "Nabil"
 - family-names: "van der Wulp"
   given-names: "Timo"
 title: "CognitiveMapr"
-version: 1.0.0
+version: 2.0.0
 doi: "10.5281/zenodo.10827421"
-date-released: 2024-01-31
+date-released: 2026-04-29
 url: "https://github.com/jfasnellens/cognitivemapr"
 preferred-citation:
   type: article

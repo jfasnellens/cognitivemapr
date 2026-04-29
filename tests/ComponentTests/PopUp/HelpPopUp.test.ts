@@ -5,9 +5,9 @@
 
 import { describe, it, test, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import HelpPopUp from '../components/PopupComponents/Help/HelpPopUp.vue';
-import PopupComponentsHelpGeneral from '../components/PopupComponents/Help/General.vue';
-import PopupComponentsHelpContact from '../components/PopupComponents/Help/Contact.vue';
+import HelpPopUp from '../../../components/PopupComponents/Help/HelpPopUp.vue';
+import PopupComponentsHelpGeneral from '../../../components/PopupComponents/Help/General.vue';
+import PopupComponentsHelpContact from '../../../components/PopupComponents/Help/Contact.vue';
 
 describe('HelpPopUp', () => {
   it.each(['.helpPopupWrapper', '.content', '.left', '.right', '.close', 'button'])(

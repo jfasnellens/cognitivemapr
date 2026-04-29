@@ -1,19 +1,23 @@
 /*
-*  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
-* It is distributed under the GPL 3.0 open source license.
-*/
+ *  This program has been developed by students from the bachelor's Computer Science program at Utrecht University within the Software Project course.
+ * It is distributed under the GPL 3.0 open source license.
+ */
 
 import { defineStore } from 'pinia';
 import { DirectedGraph } from 'graphology';
 import type Graphology from 'graphology';
 
-/* eslint-disable-next-line import/default */
-import SugiyamaWorker from 'assets/workers/sugiyama?worker';
-import type { Graph, UUID } from '@/types/graph';
 import type { DefaultSugiyama, MutGraph } from 'd3-dag';
 import SugiyamaWorker from 'assets/workers/sugiyama?worker'; // eslint-disable-line
 
 import type { Graph, UUID } from '@/types/graph';
+import {
+  calcEdgeSize,
+  calcNodeSize,
+  edgeValueToEdgeColor,
+  evaluateConceptValueToColor,
+  paradigmsToNodeColor,
+} from '~/scripts/utils';
 
 export const useGraphStore = defineStore('graphStore', () => {
   const activeTab: Ref<number> = ref(0);
@@ -85,20 +89,51 @@ export const useGraphStore = defineStore('graphStore', () => {
           paradigmB: paradigmSupport ? paradigmSupport.paradigmB.value : null,
           instrument: instr,
           degrees: weightedDegrees.all,
-          size: 5,
+          size: 7,
+          sizeDegree: calcNodeSize(true, weightedDegrees.all),
           x: positions![id].y * 13,
           y: -positions![id].x,
-          type: 'border',
+          type: 'bordered',
+          borderColorEval: evaluateConceptValueToColor(evaluation.value ?? 0, {
+            positive: inputGraph.settings.legend.positiveEdge.color,
+            negative: inputGraph.settings.legend.negativeEdge.color,
+            neutral: inputGraph.settings.legend.neutralEdge.color,
+          }),
+          evaluation,
+          colorEval: paradigmSupport
+            ? paradigmsToNodeColor(
+                {
+                  paradigmA: inputGraph.settings.legend.paradigmA.color,
+                  paradigmB: inputGraph.settings.legend.paradigmB.color,
+                  noParadigm: inputGraph.settings.legend.noParadigm.color,
+                },
+                paradigmSupport?.paradigmA.value,
+                paradigmSupport?.paradigmB.value,
+              )
+            : inputGraph.settings.legend.noParadigm.color,
         });
       },
     );
 
-    const allWeights = inputGraph.edgeArray.map((edge) => edge.weight);
-    const maxWeight = Math.max(...allWeights);
-    const minWeight = Math.min(...allWeights);
-
-    inputGraph.edgeArray.forEach(({ from, to, weight, edgeValue }) => {
-      graph.mergeEdge(from, to, { type: 'arrow', weight, maxWeight, minWeight, value: edgeValue });
+    inputGraph.edgeArray.forEach(({ from, to, weight, edgeValue, summedWeight }) => {
+      const fromNode = graph.getNodeAttributes(from);
+      const toNode = graph.getNodeAttributes(to);
+      graph.mergeEdge(from, to, {
+        type: fromNode.x - toNode.x > 0 ? 'curved' : 'arrow',
+        size: 2,
+        sizeWeight: calcEdgeSize(weight),
+        weight,
+        summedWeight: summedWeight,
+        value: edgeValue,
+        color: edgeValueToEdgeColor(
+          {
+            positiveEdgeColor: inputGraph.settings.legend.positiveEdge.color,
+            negativeEdgeColor: inputGraph.settings.legend.negativeEdge.color,
+            neutralEdgeColor: inputGraph.settings.legend.neutralEdge.color,
+          },
+          edgeValue,
+        ),
+      });
     });
     return graph;
   }

@@ -43,8 +43,6 @@ It is distributed under the GPL 3.0 open source license.-->
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { useFileStore } from '@/stores/fileStore';
-import { useScriptStore } from '@/stores/scriptStore';
 import type { Graph, Node } from '~/types/graph';
 
 const fileStore = useFileStore();
@@ -98,6 +96,7 @@ function validateCollections() {
  * Fills the graph storage in script store with the given collections. Then passes the first graph into the next page.
  */
 async function createGraphs() {
+  showModal.value = false;
   scriptStore.resetGraph();
   const ids = await Promise.all(
     collections.value.map(async (collection) => {

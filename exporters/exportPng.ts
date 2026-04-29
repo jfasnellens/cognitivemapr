@@ -19,6 +19,12 @@ export class ExportPNG implements Exporter {
     const graph = graphObject.sigmaGraph;
     const { width, height } = graph!.getDimensions();
 
+    // This pixel ratio is here to deal with retina displays.
+    // Indeed, for dimensions W and H, on a retina display, the canvases
+    // dimensions actually are 2 * W and 2 * H. Sigma properly deals with it, but
+    // we need to readapt here:
+    const pixelRatio = window.devicePixelRatio || 1;
+
     // create a new div for the new sigma graph
     const root = document.createElement('div');
     root.style.width = `${width}px`;
@@ -37,19 +43,19 @@ export class ExportPNG implements Exporter {
 
     // make a new canvas element
     const canvas = document.createElement('canvas');
-    canvas.setAttribute('width', width + '');
-    canvas.setAttribute('height', height + '');
+    canvas.setAttribute('width', width * pixelRatio + '');
+    canvas.setAttribute('height', height * pixelRatio + '');
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
     // set the basic settings of the canvas element
     ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, width * pixelRatio, height * pixelRatio);
 
     // draw all data on the new canvas
     const canvases = newGraph.getCanvases();
     const layers = ['edges', 'edgeLabels', 'nodes', 'labels', 'hovers', 'hoverNodes'];
     layers.forEach((item) => {
-      ctx.drawImage(canvases[item], 0, 0, width, height);
+      ctx.drawImage(canvases[item], 0, 0, width * pixelRatio, height * pixelRatio);
     });
 
     if (useGlobalStore().visualSettings.showLegend.enabled) {
@@ -63,7 +69,7 @@ export class ExportPNG implements Exporter {
         const mainCanvas = await toCanvas(mainGraphContent, {
           // ignore the sigma graph
           filter: (el) =>
-            el.className !== 'container' &&
+            el.className !== 'graphContainer' &&
             el.className !== 'zoomBtnWrapper' &&
             el.className !== 'searchFunctionDiv',
         });
@@ -74,8 +80,8 @@ export class ExportPNG implements Exporter {
           mainCanvas,
           0,
           0,
-          mainGraphContent.offsetWidth,
-          mainGraphContent.offsetHeight,
+          mainGraphContent.offsetWidth * pixelRatio,
+          mainGraphContent.offsetHeight * pixelRatio,
         );
       }
     }

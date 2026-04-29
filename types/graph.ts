@@ -3,6 +3,7 @@
 * It is distributed under the GPL 3.0 open source license.
 */
 
+import type { DirectedGraph } from 'graphology';
 import type Sigma from 'sigma';
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 export type ISODateString = string;
@@ -62,7 +63,7 @@ export interface Node {
  * Edge in the graph
  */
 export interface Edge {
-  [index: string]: string | ISODateString | number | Date | UUID | undefined;
+  [index: string]: string | ISODateString | number | Date | UUID | Array<Partial<Edge>> | undefined;
   /** ID the Edge is connected from */
   from: number | UUID;
   /** ID the Edge is going to */
@@ -72,19 +73,21 @@ export interface Edge {
   /** Node name the edge is going to */
   toName?: string;
 
-  weight: number;
   edgeValue: number;
+  weight: number; // Should always be the sum of the positive, neutral and negative weights
+  posWeight: number;
+  neutWeight: number;
+  negWeight: number;
+  summedWeight: number;
 
-  /** Either an premade ID from the edge list or an generated UUID */
+  /** Either a premade ID from the edge list or an generated UUID */
   id: number | UUID;
   mapId?: string;
   mapDate?: ISODateString;
   speaker?: string;
 
-  /** @deprecated support for old format; Value now comes from the from Node */
-  valueX: number;
-  /** @deprecated support for old format; Value now comes from the to Node  */
-  valueY: number;
+  /** This edge is a combination of 2 edges, these were the originals */
+  aggregatedSrc?: Array<Partial<Edge>>;
 }
 
 export enum EntryType {
@@ -124,9 +127,31 @@ export interface Graph {
   settings: GraphSettings;
   legend?: { canvas: HTMLCanvasElement; x: number; y: number; width: number; height: number };
   sigmaGraph?: Sigma;
+  graphologyGraph?: DirectedGraph;
+  hasCycle?: boolean;
 }
 
 export interface RelevantKeys {
   key: string;
   subKeys?: RelevantKeys[];
+}
+
+export interface graphSettings {
+  algorithm: {
+    paradigmSupport: boolean;
+    instrumentSupport: boolean;
+    evaluateConcepts: boolean;
+  };
+  visual: {
+    showLegend: boolean;
+    showEdgeWeights: boolean;
+    scaleEdgesByWeight: boolean;
+    scaleNodesByDegrees: boolean;
+    showAttributesOnHover: boolean;
+    showDegreeValues: boolean;
+  };
+  interaction: {
+    showChildren: boolean;
+    showAncestors: boolean;
+  };
 }
